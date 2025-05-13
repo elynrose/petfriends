@@ -1,9 +1,15 @@
 <?php
 
+use App\Http\Controllers\Frontend\BookingController;
+use App\Http\Controllers\Frontend\ProfileController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
 Route::view('/', 'welcome');
 Route::get('userVerification/{token}', 'UserVerificationController@approve')->name('userVerification');
 Auth::routes();
 
+// Admin routes
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth', '2fa', 'admin']], function () {
     Route::get('/', 'HomeController@index')->name('home');
     // Permissions
@@ -71,8 +77,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::post('messenger/{topic}/reply', 'MessengerController@replyToTopic')->name('messenger.reply');
     Route::get('messenger/{topic}/reply', 'MessengerController@showReply')->name('messenger.showReply');
 });
+
+// Profile routes
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function () {
-    // Change password
     if (file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php'))) {
         Route::get('password', 'ChangePasswordController@edit')->name('password.edit');
         Route::post('password', 'ChangePasswordController@update')->name('password.update');
@@ -81,6 +88,8 @@ Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 
         Route::post('profile/two-factor', 'ChangePasswordController@toggleTwoFactor')->name('password.toggleTwoFactor');
     }
 });
+
+// Frontend routes
 Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['auth', '2fa']], function () {
     Route::get('/home', 'HomeController@index')->name('home');
 
@@ -99,10 +108,10 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::resource('users', 'UsersController');
 
     // Pets
-    Route::delete('pets/destroy', 'PetsController@massDestroy')->name('pets.massDestroy');
-    Route::post('pets/media', 'PetsController@storeMedia')->name('pets.storeMedia');
-    Route::post('pets/ckmedia', 'PetsController@storeCKEditorImages')->name('pets.storeCKEditorImages');
-    Route::resource('pets', 'PetsController');
+    Route::delete('pets/destroy', 'PetController@massDestroy')->name('pets.massDestroy');
+    Route::post('pets/media', 'PetController@storeMedia')->name('pets.storeMedia');
+    Route::post('pets/ckmedia', 'PetController@storeCKEditorImages')->name('pets.storeCKEditorImages');
+    Route::resource('pets', 'PetController');
 
     // Booking
     Route::delete('bookings/destroy', 'BookingController@massDestroy')->name('bookings.massDestroy');
@@ -143,9 +152,19 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('frontend/profile/destroy', 'ProfileController@destroy')->name('profile.destroy');
     Route::post('frontend/profile/password', 'ProfileController@password')->name('profile.password');
     Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
+
+    // Requests routes
+    Route::get('requests', 'RequestController@index')->name('requests.index');
+    Route::put('requests/{booking}', 'RequestController@update')->name('requests.update');
+
+    Route::put('bookings/{booking}/complete', 'BookingController@complete')->name('bookings.complete');
+
+    Route::post('pet-reviews', 'ReviewController@store')->name('pet_reviews.store');
+    Route::get('pet-reviews/create', 'ReviewController@create')->name('pet_reviews.create');
 });
+
+// Two Factor Authentication routes
 Route::group(['namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function () {
-    // Two Factor Authentication
     if (file_exists(app_path('Http/Controllers/Auth/TwoFactorController.php'))) {
         Route::get('two-factor', 'TwoFactorController@show')->name('twoFactor.show');
         Route::post('two-factor', 'TwoFactorController@check')->name('twoFactor.check');

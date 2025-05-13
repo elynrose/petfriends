@@ -50,10 +50,26 @@ class Pet extends Model implements HasMedia
         'from_time',
         'to',
         'to_time',
+        'user_id',
         'created_at',
         'updated_at',
         'deleted_at',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'pet_id');
+    }
+
+    public function petReviews()
+    {
+        return $this->hasMany(PetReview::class, 'pet_id');
+    }
 
     protected function serializeDate(DateTimeInterface $date)
     {
@@ -63,7 +79,7 @@ class Pet extends Model implements HasMedia
     public function registerMediaConversions(Media $media = null): void
     {
         $this->addMediaConversion('thumb')->fit('crop', 50, 50);
-        $this->addMediaConversion('preview')->fit('crop', 120, 120);
+        $this->addMediaConversion('preview')->fit('crop', 267, 200);
     }
 
     public function getPhotoAttribute()

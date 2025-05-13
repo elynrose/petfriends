@@ -2,64 +2,40 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Pet;
-use Gate;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Response;
 
 class UpdatePetRequest extends FormRequest
 {
     public function authorize()
     {
-        return Gate::allows('pet_edit');
+        return true;
     }
 
     public function rules()
     {
-        return [
-            'photo' => [
-                'array',
-                'required',
-            ],
-            'photo.*' => [
-                'required',
-            ],
-            'type' => [
-                'required',
-            ],
-            'name' => [
-                'string',
-                'required',
-            ],
-            'age' => [
-                'required',
-                'integer',
-                'min:-2147483648',
-                'max:2147483647',
-            ],
-            'gender' => [
-                'required',
-            ],
-            'notes' => [
-                'string',
-                'nullable',
-            ],
-            'from' => [
-                'date_format:' . config('panel.date_format'),
-                'nullable',
-            ],
-            'from_time' => [
-                'date_format:' . config('panel.time_format'),
-                'nullable',
-            ],
-            'to' => [
-                'date_format:' . config('panel.date_format'),
-                'nullable',
-            ],
-            'to_time' => [
-                'date_format:' . config('panel.time_format'),
-                'nullable',
-            ],
+        $rules = [
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            'age' => 'required|integer|min:0',
+            'gender' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'not_available' => 'boolean',
+            'photo' => 'nullable|array',
         ];
+
+        // If pet is available (not_available is false), require dates and times
+        if (!$this->input('not_available')) {
+            $rules['from'] = 'required|date';
+            $rules['from_time'] = 'required|date_format:H:i';
+            $rules['to'] = 'required|date|after_or_equal:from';
+            $rules['to_time'] = 'required|date_format:H:i';
+            
+            // If same day, ensure to_time is after from_time
+            if ($this->input('from') === $this->input('to')) {
+                $rules['to_time'] .= '|after:from_time';
+            }
+        }
+
+        return $rules;
     }
 }

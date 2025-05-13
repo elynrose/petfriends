@@ -13,61 +13,21 @@
                     <form method="POST" action="{{ route("frontend.bookings.store") }}" enctype="multipart/form-data">
                         @method('POST')
                         @csrf
-                        <div class="form-group">
-                            <label class="required" for="pet_id">{{ trans('cruds.booking.fields.pet') }}</label>
-                            <select class="form-control select2" name="pet_id" id="pet_id" required>
-                                @foreach($pets as $id => $entry)
-                                    <option value="{{ $id }}" {{ old('pet_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('pet'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('pet') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.booking.fields.pet_helper') }}</span>
+                       
+                        <div class="row">
+                            
                         </div>
+                      
                         <div class="form-group">
-                            <label class="required">{{ trans('cruds.booking.fields.status') }}</label>
-                            <select class="form-control" name="status" id="status" required>
-                                <option value disabled {{ old('status', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
-                                @foreach(App\Models\Booking::STATUS_SELECT as $key => $label)
-                                    <option value="{{ $key }}" {{ old('status', 'new') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('status'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('status') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.booking.fields.status_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="photos">{{ trans('cruds.booking.fields.photos') }}</label>
-                            <div class="needsclick dropzone" id="photos-dropzone">
-                            </div>
-                            @if($errors->has('photos'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('photos') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.booking.fields.photos_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="required" for="user_id">{{ trans('cruds.booking.fields.user') }}</label>
-                            <select class="form-control select2" name="user_id" id="user_id" required>
-                                @foreach($users as $id => $entry)
-                                    <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('user'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('user') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.booking.fields.user_helper') }}</span>
-                        </div>
-                        <div class="form-group">
+                            <input type="hidden" name="status" value="new">
+                            <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
+                            <input type="hidden" name="pet_id" value="{{ Request::get('pet_id') }}">
+                            <input type="hidden" name="from" value="{{ Request::get('from') }}">
+                            <input type="hidden" name="to" value="{{ Request::get('to') }}">
+                            <input type="hidden" name="from_time" value="{{ Request::get('from_time') }}">
+                            <input type="hidden" name="to_time" value="{{ Request::get('to_time') }}">
+                            <input type="hidden" name="notes" value="{{ Request::get('notes') }}">
+                            <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
                             <button class="btn btn-danger" type="submit">
                                 {{ trans('global.save') }}
                             </button>

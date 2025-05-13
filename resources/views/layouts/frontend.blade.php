@@ -52,6 +52,22 @@
                                     {{ __('Dashboard') }}
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('frontend.pets.index') }}">
+                                    {{ __('My Pets') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.bookings.') ? 'active' : '' }}" href="{{ route('frontend.bookings.index') }}">
+                                    <i class="fas fa-calendar-alt"></i> My Bookings
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.requests.*') ? 'active' : '' }}" href="{{ route('frontend.requests.index') }}">
+                                    <i class="fas fa-inbox"></i> Booking Requests
+                                </a>
+                            </li>
+                            
                         @endguest
                     </ul>
 
@@ -71,6 +87,7 @@
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }} <span class="caret"></span>
+                                    <span class="badge badge-info ml-2">{{ Auth::user()->credits }} Credits</span>
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">

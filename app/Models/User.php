@@ -13,22 +13,78 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class User extends Authenticatable implements HasMedia
+class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
-    use SoftDeletes, Notifiable, InteractsWithMedia, HasFactory;
+    use HasApiTokens, SoftDeletes, Notifiable, HasFactory, InteractsWithMedia;
 
     public $table = 'users';
 
-    protected $appends = [
-        'photo',
+    const STATE_SELECT = [
+        'AL' => 'Alabama',
+        'AK' => 'Alaska',
+        'AZ' => 'Arizona',
+        'AR' => 'Arkansas',
+        'CA' => 'California',
+        'CO' => 'Colorado',
+        'CT' => 'Connecticut',
+        'DE' => 'Delaware',
+        'DC' => 'District of Columbia',
+        'FL' => 'Florida',
+        'GA' => 'Georgia',
+        'HI' => 'Hawaii',
+        'ID' => 'Idaho',
+        'IL' => 'Illinois',
+        'IN' => 'Indiana',
+        'IA' => 'Iowa',
+        'KS' => 'Kansas',
+        'KY' => 'Kentucky',
+        'LA' => 'Louisiana',
+        'ME' => 'Maine',
+        'MD' => 'Maryland',
+        'MA' => 'Massachusetts',
+        'MI' => 'Michigan',
+        'MN' => 'Minnesota',
+        'MS' => 'Mississippi',
+        'MO' => 'Missouri',
+        'MT' => 'Montana',
+        'NE' => 'Nebraska',
+        'NV' => 'Nevada',
+        'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',
+        'NM' => 'New Mexico',
+        'NY' => 'New York',
+        'NC' => 'North Carolina',
+        'ND' => 'North Dakota',
+        'OH' => 'Ohio',
+        'OK' => 'Oklahoma',
+        'OR' => 'Oregon',
+        'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',
+        'SC' => 'South Carolina',
+        'SD' => 'South Dakota',
+        'TN' => 'Tennessee',
+        'TX' => 'Texas',
+        'UT' => 'Utah',
+        'VT' => 'Vermont',
+        'VA' => 'Virginia',
+        'WA' => 'Washington',
+        'WV' => 'West Virginia',
+        'WI' => 'Wisconsin',
+        'WY' => 'Wyoming',
+        'AS' => 'American Samoa',
+        'GU' => 'Guam',
+        'MP' => 'Northern Mariana Islands',
+        'PR' => 'Puerto Rico',
+        'VI' => 'U.S. Virgin Islands',
     ];
 
-    public const STATE_SELECT = [
-        'Arkansas' => 'Arkansas',
+    protected $appends = [
+        'photo',
     ];
 
     protected $hidden = [
@@ -67,6 +123,16 @@ class User extends Authenticatable implements HasMedia
         'updated_at',
         'deleted_at',
         'two_factor_expires_at',
+        'phone',
+        'sms_notifications',
+        'credits',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'sms_notifications' => 'boolean',
+        'credits' => 'integer',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -131,27 +197,28 @@ class User extends Authenticatable implements HasMedia
         self::observe(new \App\Observers\UserActionObserver);
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaCollections(): void
     {
-        $this->addMediaConversion('thumb')->fit('crop', 50, 50);
-        $this->addMediaConversion('preview')->fit('crop', 120, 120);
-    }
-
-    public function userUserAlerts()
-    {
-        return $this->belongsToMany(UserAlert::class);
+        $this->addMediaCollection('photo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
+            ->maxFileSize(2 * 1024); // 2MB
     }
 
     public function getPhotoAttribute()
     {
         $file = $this->getMedia('photo')->last();
         if ($file) {
-            $file->url       = $file->getUrl();
+            $file->url = $file->getUrl();
             $file->thumbnail = $file->getUrl('thumb');
-            $file->preview   = $file->getUrl('preview');
+            $file->preview = $file->getUrl('preview');
         }
-
         return $file;
+    }
+
+    public function userUserAlerts()
+    {
+        return $this->belongsToMany(UserAlert::class);
     }
 
     public function getEmailVerifiedAtAttribute($value)
@@ -199,5 +266,31 @@ class User extends Authenticatable implements HasMedia
     public function setTwoFactorExpiresAtAttribute($value)
     {
         $this->attributes['two_factor_expires_at'] = $value ? Carbon::createFromFormat(config('panel.date_format') . ' ' . config('panel.time_format'), $value)->format('Y-m-d H:i:s') : null;
+    }
+
+    public function addCredits(int $hours)
+    {
+        $this->credits += $hours;
+        $this->save();
+    }
+
+    public function deductCredits(int $credits)
+    {
+        if ($this->credits >= $credits) {
+            $this->credits -= $credits;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+
+    public function hasEnoughCredits(int $credits)
+    {
+        return $this->credits >= $credits;
+    }
+
+    public function getCreditsAttribute($value)
+    {
+        return (int) $value;
     }
 }

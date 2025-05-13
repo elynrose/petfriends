@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Illuminate\Notifications\Notifiable;
+use App\Services\CreditService;
 
 class Booking extends Model implements HasMedia
 {
-    use SoftDeletes, InteractsWithMedia, HasFactory;
+    use SoftDeletes, InteractsWithMedia, HasFactory, Notifiable;
 
     public $table = 'bookings';
 
@@ -24,23 +26,34 @@ class Booking extends Model implements HasMedia
         'created_at',
         'updated_at',
         'deleted_at',
+        'from',
+        'to',
+        'start_time',
+        'end_time',
     ];
 
     protected $fillable = [
         'pet_id',
+        'from',
+        'from_time',
+        'to',
+        'to_time',
+        'start_time',
+        'end_time',
         'status',
         'user_id',
+        'notes',
         'created_at',
         'updated_at',
         'deleted_at',
     ];
 
     public const STATUS_SELECT = [
-        'new'       => 'New',
+        'pending'   => 'Pending',
         'accepted'  => 'Accepted',
-        'completed' => 'Completed',
-        'cancelled' => 'Cancelled',
         'rejected'  => 'Rejected',
+        'completed' => 'Completed',
+        'new'       => 'New',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -80,5 +93,58 @@ class Booking extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    public function photos()
+    {
+        return $this->morphMany(Media::class, 'model');
+    }
+
+    /**
+     * Complete the booking and award credits to the user
+     *
+     * @return bool
+     */
+    public function complete()
+    {
+        if ($this->status !== 'completed') {
+            $this->status = 'completed';
+            $this->save();
+
+            // Award credits to the user
+            $creditService = app(CreditService::class);
+            $creditService->awardCreditsForBooking($this->user, $this);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the user has enough credits for this booking
+     *
+     * @return bool
+     */
+    public function userHasEnoughCredits()
+    {
+        $creditService = app(CreditService::class);
+        return $creditService->hasEnoughCreditsForBooking($this->user, $this);
+    }
+
+    /**
+     * Deduct credits from the user for this booking
+     *
+     * @return bool
+     */
+    public function deductUserCredits()
+    {
+        $creditService = app(CreditService::class);
+        return $creditService->deductCreditsForBooking($this->user, $this);
     }
 }

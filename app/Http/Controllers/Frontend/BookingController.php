@@ -14,6 +14,8 @@ use Gate;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -23,7 +25,9 @@ class BookingController extends Controller
     {
         abort_if(Gate::denies('booking_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $bookings = Booking::with(['pet', 'user', 'media'])->get();
+        $bookings = Booking::with(['pet', 'user', 'media'])
+        ->where('user_id', auth()->id())
+        ->get();
 
         return view('frontend.bookings.index', compact('bookings'));
     }
@@ -32,23 +36,32 @@ class BookingController extends Controller
     {
         abort_if(Gate::denies('booking_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $pets = Pet::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
         return view('frontend.bookings.create', compact('pets', 'users'));
     }
 
     public function store(StoreBookingRequest $request)
     {
-        $booking = Booking::create($request->all());
+        $data = $request->all();
 
-        foreach ($request->input('photos', []) as $file) {
-            $booking->addMedia(storage_path('tmp/uploads/' . basename($file)))->toMediaCollection('photos');
+        $booking = Booking::where('pet_id', $data['pet_id'])
+            ->where('from', '<=', $data['to'])
+            ->where('to', '>=', $data['from'])
+            ->where('status', '!=', 'completed')
+            ->first();
+
+        if ($booking) {
+            return redirect()->back()->with('error', 'This pet is already booked for the selected dates.');
         }
+        
+        //Add the from date  and time to the data array, it should be the current date and time
 
-        if ($media = $request->input('ck-media', false)) {
-            Media::whereIn('id', $media)->update(['model_id' => $booking->id]);
+        $data['from'] = Carbon::now()->format('Y-m-d');
+        $data['from_time'] = Carbon::now()->format('H:i');
+        
+        $booking = Booking::create($data);
+
+        if ($request->input('photo', false)) {
+            $booking->addMedia(storage_path('tmp/uploads/' . basename($request->input('photo'))))->toMediaCollection('photo');
         }
 
         return redirect()->route('frontend.bookings.index');
@@ -101,9 +114,14 @@ class BookingController extends Controller
     {
         abort_if(Gate::denies('booking_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
+        // Prevent cancellation of completed bookings
+        if ($booking->status === 'completed') {
+            return redirect()->back()->with('error', 'Completed bookings cannot be cancelled.');
+        }
+
         $booking->delete();
 
-        return back();
+        return back()->with('success', 'Booking has been cancelled successfully.');
     }
 
     public function massDestroy(MassDestroyBookingRequest $request)
@@ -128,4 +146,24 @@ class BookingController extends Controller
 
         return response()->json(['id' => $media->id, 'url' => $media->getUrl()], Response::HTTP_CREATED);
     }
+
+    public function complete(Booking $booking)
+    {
+        // Check if the booking is already completed
+        if ($booking->status === 'completed') {
+            return redirect()->route('frontend.bookings.index')
+                ->with('error', 'This booking is already completed.');
+        }
+
+        // Use the complete() method which handles credit awarding
+        if ($booking->complete()) {
+            return redirect()->route('frontend.bookings.index')
+                ->with('success', 'Booking completed successfully. Credits have been awarded.');
+        }
+
+        return redirect()->route('frontend.bookings.index')
+            ->with('error', 'Failed to complete booking.');
+    }
+
+
 }

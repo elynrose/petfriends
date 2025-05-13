@@ -98,6 +98,8 @@ return [
         'title_singular' => 'Pet',
         'fields'         => [
             'id'                   => 'ID',
+            'available'            => 'Available',
+            'not_available'        => 'Not Available',
             'id_helper'            => ' ',
             'photo'                => 'Photo',
             'photo_helper'         => ' ',

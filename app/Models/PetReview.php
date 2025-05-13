@@ -20,10 +20,11 @@ class PetReview extends Model
     ];
 
     protected $fillable = [
-        'score',
+        'rating',
         'comment',
         'pet_id',
         'booking_id',
+        'user_id',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -48,5 +49,10 @@ class PetReview extends Model
     public function booking()
     {
         return $this->belongsTo(Booking::class, 'booking_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

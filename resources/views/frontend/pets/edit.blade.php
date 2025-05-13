@@ -3,7 +3,12 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-12">
-
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
+            @endif  
+            
             <div class="card">
                 <div class="card-header">
                     {{ trans('global.edit') }} {{ trans('cruds.pet.title_singular') }}
@@ -13,204 +18,237 @@
                     <form method="POST" action="{{ route("frontend.pets.update", [$pet->id]) }}" enctype="multipart/form-data">
                         @method('PUT')
                         @csrf
-                        <div class="form-group">
-                            <label class="required" for="photo">{{ trans('cruds.pet.fields.photo') }}</label>
-                            <div class="needsclick dropzone" id="photo-dropzone">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required" for="photo">{{ trans('cruds.pet.fields.photo') }}</label>
+                                    <div class="needsclick dropzone" id="photo-dropzone">
+                                    </div>
+                                    @if($errors->has('photo'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('photo') }}
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            @if($errors->has('photo'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('photo') }}
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required" for="name">{{ trans('cruds.pet.fields.name') }}</label>
+                                    <input class="form-control" type="text" name="name" id="name" value="{{ old('name', $pet->name) }}" required>
+                                    @if($errors->has('name'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('name') }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.photo_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="required">{{ trans('cruds.pet.fields.type') }}</label>
-                            <select class="form-control" name="type" id="type" required>
-                                <option value disabled {{ old('type', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
-                                @foreach(App\Models\Pet::TYPE_SELECT as $key => $label)
-                                    <option value="{{ $key }}" {{ old('type', $pet->type) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('type'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('type') }}
+                                <div class="form-group">
+                                    <label class="required">{{ trans('cruds.pet.fields.type') }}</label>
+                                    <select class="form-control" name="type" id="type" required>
+                                        <option value disabled {{ old('type', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                                        @foreach(App\Models\Pet::TYPE_SELECT as $key => $label)
+                                            <option value="{{ $key }}" {{ old('type', $pet->type) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @if($errors->has('type'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('type') }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.type_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="required" for="name">{{ trans('cruds.pet.fields.name') }}</label>
-                            <input class="form-control" type="text" name="name" id="name" value="{{ old('name', $pet->name) }}" required>
-                            @if($errors->has('name'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('name') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.name_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="required" for="age">{{ trans('cruds.pet.fields.age') }}</label>
-                            <input class="form-control" type="number" name="age" id="age" value="{{ old('age', $pet->age) }}" step="1" required>
-                            @if($errors->has('age'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('age') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.age_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="required">{{ trans('cruds.pet.fields.gender') }}</label>
-                            <select class="form-control" name="gender" id="gender" required>
-                                <option value disabled {{ old('gender', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
-                                @foreach(App\Models\Pet::GENDER_SELECT as $key => $label)
-                                    <option value="{{ $key }}" {{ old('gender', $pet->gender) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('gender'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('gender') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.gender_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="notes">{{ trans('cruds.pet.fields.notes') }}</label>
-                            <input class="form-control" type="text" name="notes" id="notes" value="{{ old('notes', $pet->notes) }}">
-                            @if($errors->has('notes'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('notes') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.notes_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <div>
-                                <input type="hidden" name="not_available" value="0">
-                                <input type="checkbox" name="not_available" id="not_available" value="1" {{ $pet->not_available || old('not_available', 0) === 1 ? 'checked' : '' }}>
-                                <label for="not_available">{{ trans('cruds.pet.fields.not_available') }}</label>
                             </div>
-                            @if($errors->has('not_available'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('not_available') }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required" for="age">{{ trans('cruds.pet.fields.age') }}</label>
+                                    <input class="form-control" type="number" name="age" id="age" value="{{ old('age', $pet->age) }}" step="1" required>
+                                    @if($errors->has('age'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('age') }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.not_available_helper') }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required">{{ trans('cruds.pet.fields.gender') }}</label>
+                                    <select class="form-control" name="gender" id="gender" required>
+                                        <option value disabled {{ old('gender', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                                        @foreach(App\Models\Pet::GENDER_SELECT as $key => $label)
+                                            <option value="{{ $key }}" {{ old('gender', $pet->gender) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @if($errors->has('gender'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('gender') }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="notes">{{ trans('cruds.pet.fields.notes') }}</label>
+                                    <textarea class="form-control" name="notes" id="notes" rows="2">{{ old('notes', $pet->notes) }}</textarea>
+                                    @if($errors->has('notes'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('notes') }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="hidden" name="not_available" value="0">
+                                        <input type="checkbox" class="custom-control-input" name="not_available" id="not_available" value="1" {{ $pet->not_available || old('not_available', 0) === 1 ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="not_available">{{ trans('cruds.pet.fields.not_available') }}</label>
+                                    </div>
+                                    @if($errors->has('not_available'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('not_available') }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div id="availabilityDates" class="form-group" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="required" for="from">Available From</label>
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <input class="form-control date" type="text" name="from" id="from" value="{{ old('from', $pet->from ? date('Y-m-d', strtotime($pet->from)) : '') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input class="form-control" type="time" name="from_time" id="from_time" value="{{ old('from_time', $pet->from_time ? date('H:i', strtotime($pet->from_time)) : '') }}">
+                                                </div>
+                                            </div>
+                                            @if($errors->has('from'))
+                                                <div class="invalid-feedback">
+                                                    {{ $errors->first('from') }}
+                                                </div>
+                                            @endif
+                                            @if($errors->has('from_time'))
+                                                <div class="invalid-feedback">
+                                                    {{ $errors->first('from_time') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="required" for="to">Available To</label>
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <input class="form-control date" type="text" name="to" id="to" value="{{ old('to', $pet->to ? date('Y-m-d', strtotime($pet->to)) : '') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input class="form-control" type="time" name="to_time" id="to_time" value="{{ old('to_time', $pet->to_time ? date('H:i', strtotime($pet->to_time)) : '') }}">
+                                                </div>
+                                            </div>
+                                            @if($errors->has('to'))
+                                                <div class="invalid-feedback">
+                                                    {{ $errors->first('to') }}
+                                                </div>
+                                            @endif
+                                            @if($errors->has('to_time'))
+                                                <div class="invalid-feedback">
+                                                    {{ $errors->first('to_time') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="from">{{ trans('cruds.pet.fields.from') }}</label>
-                            <input class="form-control date" type="text" name="from" id="from" value="{{ old('from', $pet->from) }}">
-                            @if($errors->has('from'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('from') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.from_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="from_time">{{ trans('cruds.pet.fields.from_time') }}</label>
-                            <input class="form-control timepicker" type="text" name="from_time" id="from_time" value="{{ old('from_time', $pet->from_time) }}">
-                            @if($errors->has('from_time'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('from_time') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.from_time_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="to">{{ trans('cruds.pet.fields.to') }}</label>
-                            <input class="form-control date" type="text" name="to" id="to" value="{{ old('to', $pet->to) }}">
-                            @if($errors->has('to'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('to') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.to_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="to_time">{{ trans('cruds.pet.fields.to_time') }}</label>
-                            <input class="form-control timepicker" type="text" name="to_time" id="to_time" value="{{ old('to_time', $pet->to_time) }}">
-                            @if($errors->has('to_time'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('to_time') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pet.fields.to_time_helper') }}</span>
-                        </div>
-                        <div class="form-group">
-                            <button class="btn btn-danger" type="submit">
+                            <button class="btn btn-primary" type="submit">
                                 {{ trans('global.save') }}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 @endsection
 
 @section('scripts')
+@parent
 <script>
     var uploadedPhotoMap = {}
-Dropzone.options.photoDropzone = {
-    url: '{{ route('frontend.pets.storeMedia') }}',
-    maxFilesize: 5, // MB
-    acceptedFiles: '.jpeg,.jpg,.png,.gif',
-    addRemoveLinks: true,
-    headers: {
-      'X-CSRF-TOKEN': "{{ csrf_token() }}"
-    },
-    params: {
-      size: 5,
-      width: 4096,
-      height: 4096
-    },
-    success: function (file, response) {
-      $('form').append('<input type="hidden" name="photo[]" value="' + response.name + '">')
-      uploadedPhotoMap[file.name] = response.name
-    },
-    removedfile: function (file) {
-      console.log(file)
-      file.previewElement.remove()
-      var name = ''
-      if (typeof file.file_name !== 'undefined') {
-        name = file.file_name
-      } else {
-        name = uploadedPhotoMap[file.name]
-      }
-      $('form').find('input[name="photo[]"][value="' + name + '"]').remove()
-    },
-    init: function () {
-@if(isset($pet) && $pet->photo)
-      var files = {!! json_encode($pet->photo) !!}
-          for (var i in files) {
-          var file = files[i]
-          this.options.addedfile.call(this, file)
-          this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
-          file.previewElement.classList.add('dz-complete')
-          $('form').append('<input type="hidden" name="photo[]" value="' + file.file_name + '">')
+    Dropzone.options.photoDropzone = {
+        url: '{{ route('frontend.pets.storeMedia') }}',
+        maxFilesize: 5, // MB
+        acceptedFiles: '.jpeg,.jpg,.png,.gif',
+        addRemoveLinks: true,
+        headers: {
+            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+        },
+        params: {
+            size: 5,
+            width: 4096,
+            height: 4096
+        },
+        success: function (file, response) {
+            $('form').append('<input type="hidden" name="photo[]" value="' + response.name + '">')
+            uploadedPhotoMap[file.name] = response.name
+        },
+        removedfile: function (file) {
+            file.previewElement.remove()
+            var name = ''
+            if (typeof file.file_name !== 'undefined') {
+                name = file.file_name
+            } else {
+                name = uploadedPhotoMap[file.name]
+            }
+            $('form').find('input[name="photo[]"][value="' + name + '"]').remove()
+        },
+        init: function () {
+            @if(isset($pet) && $pet->photo)
+                var files = {!! json_encode($pet->photo) !!}
+                for (var i in files) {
+                    var file = files[i]
+                    this.options.addedfile.call(this, file)
+                    this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
+                    file.previewElement.classList.add('dz-complete')
+                    $('form').append('<input type="hidden" name="photo[]" value="' + file.file_name + '">')
+                }
+            @endif
+        },
+        error: function (file, response) {
+            if ($.type(response) === 'string') {
+                var message = response //dropzone sends it's own error messages in string
+            } else {
+                var message = response.errors.file
+            }
+            file.previewElement.classList.add('dz-error')
+            _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
+            _results = []
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                node = _ref[_i]
+                _results.push(node.textContent = message)
+            }
+            return _results
         }
-@endif
-    },
-     error: function (file, response) {
-         if ($.type(response) === 'string') {
-             var message = response //dropzone sends it's own error messages in string
-         } else {
-             var message = response.errors.file
-         }
-         file.previewElement.classList.add('dz-error')
-         _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
-         _results = []
-         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-             node = _ref[_i]
-             _results.push(node.textContent = message)
-         }
+    }
 
-         return _results
-     }
-}
+    // Add this new script for handling availability dates
+    $(document).ready(function() {
+        function toggleAvailabilityDates() {
+            if ($('#not_available').is(':checked')) {
+                $('#availabilityDates').hide();
+                $('#from, #to, #from_time, #to_time').removeAttr('required');
+            } else {
+                $('#availabilityDates').show();
+                $('#from, #to, #from_time, #to_time').attr('required', 'required');
+            }
+        }
 
+        // Initial state
+        toggleAvailabilityDates();
+
+        // Toggle on checkbox change
+        $('#not_available').change(function() {
+            toggleAvailabilityDates();
+        });
+    });
 </script>
 @endsection

@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Gate;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends FormRequest
@@ -16,8 +14,6 @@ class UpdateProfileRequest extends FormRequest
      */
     public function authorize()
     {
-        abort_if(Gate::denies('profile_password_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         return true;
     }
 
@@ -29,8 +25,14 @@ class UpdateProfileRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . auth()->id()],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($this->user()->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'sms_notifications' => ['boolean'],
+            'street_address' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:255'],
+            'state' => ['required', 'string', 'max:255'],
+            'zip_code' => ['required', 'string', 'max:20'],
         ];
     }
 }

@@ -2,6 +2,14 @@
 
 return [
     'actions'                        => 'Actions',
+    'moreinfo'                       => 'More info',
+    'book'                           => 'Book this pet',
+    'my_bookings'                    => 'My Bookings',
+    'my_pets'                        => 'My Pets',
+    'my_profile'                     => 'My Profile',
+    'no_records_found'               => 'No results found.',
+    'no_pets_found'                  => 'No pets found.',
+    'no_bookings_found'              => 'No bookings found.',
     'add'                            => 'Add',
     'allRightsReserved'              => 'All rights reserved.',
     'areYouSure'                     => 'Are you sure?',
@@ -322,5 +330,16 @@ return [
     'leave'                          => 'Leave',
     'calendar'                       => 'Calendar',
     'messenger'                      => 'Messenger',
+    'cancelBooking'                  => 'Cancel Booking',
+    'cancelBookingConfirmation'       => 'Are you sure you want to cancel this booking?',
+    'completeBooking'                => 'Complete Booking',
+    'completeBookingConfirmation'     => 'Are you sure you want to mark this booking as completed?',
+    'markAsCompleted'                => 'Mark as Completed',
+    'profile_updated'                => 'Profile updated successfully',
+    'pet_created'                    => 'Pet created successfully',
+    'pet_updated'                    => 'Pet updated successfully',
+    'pet_deleted'                    => 'Pet deleted successfully',
+    'pet_not_found'                  => 'Pet not found',
+    
 
 ];
