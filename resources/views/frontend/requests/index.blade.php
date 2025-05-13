@@ -128,9 +128,9 @@
                                                                 @csrf
                                                                 @method('PUT')
                                                                 <button type="submit" 
-                                                                        class="btn btn-outline-primary btn-sm"
+                                                                        class="btn btn-outline-success btn-sm"
                                                                         onclick="return confirm('{{ trans('global.completeBookingConfirmation') }}')">
-                                                                    <i class="fas fa-check"></i> {{ trans('global.markAsCompleted') }}
+                                                                    <i class="fas fa-check"></i> Complete
                                                                 </button>
                                                             </form>
                                                         @endif

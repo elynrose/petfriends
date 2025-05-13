@@ -129,7 +129,11 @@ class RequestController extends Controller
             ->where('status', 'accepted')
             ->where(function ($query) use ($booking) {
                 $query->whereBetween('from', [$booking->from, $booking->to])
-                    ->orWhereBetween('to', [$booking->from, $booking->to]);
+                    ->orWhereBetween('to', [$booking->from, $booking->to])
+                    ->orWhere(function ($q) use ($booking) {
+                        $q->where('from', '<=', $booking->from)
+                          ->where('to', '>=', $booking->to);
+                    });
             })
             ->exists();
     }

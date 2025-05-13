@@ -113,11 +113,16 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('pets/ckmedia', 'PetController@storeCKEditorImages')->name('pets.storeCKEditorImages');
     Route::resource('pets', 'PetController');
 
-    // Booking
+    // Requests routes
+    Route::get('requests', 'RequestController@index')->name('requests.index');
+    Route::put('requests/{booking}', 'RequestController@update')->name('requests.update');
+
+    // Booking routes
     Route::delete('bookings/destroy', 'BookingController@massDestroy')->name('bookings.massDestroy');
     Route::post('bookings/media', 'BookingController@storeMedia')->name('bookings.storeMedia');
     Route::post('bookings/ckmedia', 'BookingController@storeCKEditorImages')->name('bookings.storeCKEditorImages');
     Route::resource('bookings', 'BookingController');
+    Route::put('bookings/{booking}/complete', 'BookingController@complete')->name('bookings.complete');
 
     // Pet Reviews
     Route::delete('pet-reviews/destroy', 'PetReviewsController@massDestroy')->name('pet-reviews.massDestroy');
@@ -152,12 +157,6 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('frontend/profile/destroy', 'ProfileController@destroy')->name('profile.destroy');
     Route::post('frontend/profile/password', 'ProfileController@password')->name('profile.password');
     Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
-
-    // Requests routes
-    Route::get('requests', 'RequestController@index')->name('requests.index');
-    Route::put('requests/{booking}', 'RequestController@update')->name('requests.update');
-
-    Route::put('bookings/{booking}/complete', 'BookingController@complete')->name('bookings.complete');
 
     Route::post('pet-reviews', 'ReviewController@store')->name('pet_reviews.store');
     Route::get('pet-reviews/create', 'ReviewController@create')->name('pet_reviews.create');

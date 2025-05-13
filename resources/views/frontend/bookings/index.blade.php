@@ -94,6 +94,19 @@
                                                                 </form>
                                                             @endcan
                                                         @endif
+                                                        @if($booking->status === 'accepted')
+                                                            <form action="{{ route('frontend.bookings.complete', $booking->id) }}" 
+                                                                  method="POST" 
+                                                                  class="d-inline">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <button type="submit" 
+                                                                        class="btn btn-outline-success btn-sm"
+                                                                        onclick="return confirm('{{ trans('global.completeBookingConfirmation') }}')">
+                                                                    <i class="fas fa-check"></i> Complete
+                                                                </button>
+                                                            </form>
+                                                        @endif
                                                         @if($booking->status === 'completed' && !$booking->review)
                                                             <a href="{{ route('frontend.pet_reviews.create', ['booking' => $booking->id]) }}" 
                                                                class="btn btn-outline-primary btn-sm">

@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Services\CreditService;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -59,11 +60,6 @@ class BookingController extends Controller
         if ($booking) {
             return redirect()->back()->with('error', 'This pet is already booked for the selected dates.');
         }
-        
-        //Add the from date  and time to the data array, it should be the current date and time
-
-        $data['from'] = Carbon::now()->format('Y-m-d');
-        $data['from_time'] = Carbon::now()->format('H:i');
         
         $booking = Booking::create($data);
 
@@ -158,32 +154,64 @@ class BookingController extends Controller
     {
         // Check if the booking is already completed
         if ($booking->status === 'completed') {
-            return redirect()->route('frontend.bookings.index')
+            return redirect()->route('frontend.requests.index')
                 ->with('error', 'This booking is already completed.');
         }
 
+        // Check if the booking is accepted
+        if ($booking->status !== 'accepted') {
+            return redirect()->route('frontend.requests.index')
+                ->with('error', 'Only accepted bookings can be completed.');
+        }
+
+        // Validate booking dates
+        $from = Carbon::parse($booking->from . ' ' . $booking->from_time);
+        $to = Carbon::parse($booking->to . ' ' . $booking->to_time);
+
+        if ($to->lt($from)) {
+            return redirect()->route('frontend.requests.index')
+                ->with('error', 'Invalid booking dates: End date/time must be after start date/time.');
+        }
+
         try {
-            // Update the end time to current date and time
-            $booking->to = Carbon::now()->format('Y-m-d');
-            $booking->to_time = Carbon::now()->format('H:i');
+            // Start a database transaction
+            DB::beginTransaction();
+
+            // Load necessary relationships
+            $booking->load(['pet.user', 'user']);
+
+            // Get credit service instance
+            $creditService = app(CreditService::class);
+            
+            // Calculate hours using the service
+            $hours = $creditService->calculateBookingHours($booking);
+
+            // Update booking status
+            $booking->status = 'completed';
             $booking->save();
 
-            // Use the complete() method which handles credit awarding
-            if ($booking->complete()) {
-                // Get credit service instance
-                $creditService = app(CreditService::class);
-                
-                // Calculate hours using the service
-                $hours = $creditService->calculateBookingHours($booking);
+            // Transfer credits from pet owner to caregiver
+            // Deduct credits from pet owner
+            $booking->pet->user->deductCredits(
+                $hours,
+                "Credits deducted for {$hours} hours of pet care by {$booking->user->name}",
+                $booking
+            );
 
-                return redirect()->route('frontend.bookings.index')
-                    ->with('success', "Booking completed successfully. You provided {$hours} hours of care and earned {$hours} credits.");
-            }
+            // Award credits to caregiver
+            $booking->user->addCredits(
+                $hours,
+                "Credits earned for {$hours} hours of pet care for {$booking->pet->name}",
+                $booking
+            );
 
-            return redirect()->route('frontend.bookings.index')
-                ->with('error', 'Failed to complete booking.');
+            DB::commit();
+
+            return redirect()->route('frontend.requests.index')
+                ->with('success', "Booking completed successfully. You provided {$hours} hours of care and earned {$hours} credits.");
         } catch (\Exception $e) {
-            return redirect()->route('frontend.bookings.index')
+            DB::rollBack();
+            return redirect()->route('frontend.requests.index')
                 ->with('error', 'Error completing booking: ' . $e->getMessage());
         }
     }
