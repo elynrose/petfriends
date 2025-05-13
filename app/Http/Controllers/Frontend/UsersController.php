@@ -120,4 +120,12 @@ class UsersController extends Controller
 
         return response()->json(['id' => $media->id, 'url' => $media->getUrl()], Response::HTTP_CREATED);
     }
+
+    public function addMedia(Request $request)
+    {
+        $model = new User();
+        $model->id = 0;
+        $model->exists = true;
+        $media = $model->addMediaFromRequest('file')->toMediaCollection('photo');
+    }
 }

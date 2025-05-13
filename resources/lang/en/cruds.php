@@ -91,6 +91,15 @@ return [
             'zip_code_helper'              => ' ',
             'agree_to_terms'               => 'Agree To Terms',
             'agree_to_terms_helper'        => ' ',
+            'phone'                        => 'Phone',
+            'phone_helper'                 => ' ',
+            'sms_notifications'            => 'SMS Notifications',
+            'sms_notifications_helper'     => ' ',
+            'file'                         => 'Photo',
+            'file_helper'                  => ' ',
+            'sms_notifications'            => 'Notify me via SMS',
+            'sms_notifications_helper'     => ' ',
+
         ],
     ],
     'pet' => [

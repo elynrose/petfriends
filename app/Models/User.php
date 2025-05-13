@@ -201,8 +201,20 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         $this->addMediaCollection('photo')
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
-            ->maxFileSize(2 * 1024); // 2MB
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif']);
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(50)
+            ->height(50)
+            ->sharpen(10);
+
+        $this->addMediaConversion('preview')
+            ->width(120)
+            ->height(120)
+            ->sharpen(10);
     }
 
     public function getPhotoAttribute()

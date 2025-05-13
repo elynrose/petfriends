@@ -32,7 +32,7 @@
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
-                    </div>
+                </div>
                 @endif
 
                 <div class="card-body">
@@ -100,11 +100,10 @@
                                                             ))) }}">
                                                             {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
                                                         </span>
-                                                        
                                                     </div>
                                                     <div class="btn-group">
                                                         @if($booking->status === 'pending')
-                                                            @can('booking_delete')
+                                            @can('booking_delete')
                                                                 <form action="{{ route('frontend.bookings.destroy', $booking->id) }}" 
                                                                       method="POST" 
                                                                       onsubmit="return confirm('{{ trans('global.cancelBookingConfirmation') }}');" 
@@ -114,8 +113,8 @@
                                                                     <button type="submit" class="btn btn-outline-danger btn-sm">
                                                                         <i class="fas fa-times"></i> Cancel
                                                                     </button>
-                                                                </form>
-                                                            @endcan
+                                                </form>
+                                            @endcan
                                                         @endif
                                                         @if($booking->status === 'accepted')
                                                             <form action="{{ route('frontend.bookings.complete', $booking->id) }}" 
@@ -200,7 +199,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+                                @endforeach
                         </div>
                     @else
                         <div class="text-center py-5">
@@ -210,7 +209,7 @@
                             <a href="{{ route('frontend.pets.index') }}" class="btn btn-primary mt-3">
                                 <i class="fas fa-paw"></i> Browse Pets
                             </a>
-                        </div>
+                    </div>
                     @endif
                 </div>
             </div>

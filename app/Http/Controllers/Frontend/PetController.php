@@ -267,6 +267,12 @@ class PetController extends Controller
 
     public function show(Pet $pet)
     {
+        $pet->load(['bookings' => function($query) {
+            $query->orderBy('from', 'desc')
+                  ->orderBy('from_time', 'desc')
+                  ->with(['user']); // Eager load the user relationship
+        }]);
+
         $pendingRequestsCount = $pet->bookings()
             ->where('status', 'pending')
             ->count();

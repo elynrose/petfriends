@@ -40,7 +40,7 @@
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                                        </div>
+                        </div>
                                     @endcan
                                     <div class="carousel-inner">
                                         @foreach($pet->photo as $key => $media)
@@ -95,15 +95,15 @@
                                             <div class="col-md-6">
                                                 <p class="mb-2">
                                                     <strong><i class="fas fa-paw mr-2"></i>Type:</strong>
-                                                    {{ App\Models\Pet::TYPE_SELECT[$pet->type] ?? '' }}
+                                        {{ App\Models\Pet::TYPE_SELECT[$pet->type] ?? '' }}
                                                 </p>
                                                 <p class="mb-2">
                                                     <strong><i class="fas fa-birthday-cake mr-2"></i>Age:</strong>
-                                                    {{ $pet->age }}
+                                        {{ $pet->age }}
                                                 </p>
                                                 <p class="mb-2">
                                                     <strong><i class="fas fa-venus-mars mr-2"></i>Gender:</strong>
-                                                    {{ App\Models\Pet::GENDER_SELECT[$pet->gender] ?? '' }}
+                                        {{ App\Models\Pet::GENDER_SELECT[$pet->gender] ?? '' }}
                                                 </p>
                                             </div>
                                             <div class="col-md-6">
@@ -145,15 +145,7 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Hours</h6>
-                                                        <h3 class="display-4">
-                                                            @php
-                                                                $creditService = app(App\Services\CreditService::class);
-                                                                $totalHours = $pet->bookings->where('status', 'completed')->sum(function($booking) use ($creditService) {
-                                                                    return $creditService->calculateBookingHours($booking);
-                                                                });
-                                                            @endphp
-                                                            {{ $totalHours }}
-                                                        </h3>
+                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('hours') ?? 0 }}</h3>
                                                         <p class="text-muted small">Completed Bookings</p>
                                                     </div>
                                                 </div>
@@ -162,7 +154,7 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Credits</h6>
-                                                        <h3 class="display-4">{{ $totalHours }}</h3>
+                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('credits') ?? 0 }}</h3>
                                                         <p class="text-muted small">Used Credits</p>
                                                     </div>
                                                 </div>
@@ -242,13 +234,13 @@
                                             <th>Hours</th>
                                             <th>Credits</th>
                                             <th>Status</th>
-                                        </tr>
+                                </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($pet->bookings->sortByDesc('start_date') as $booking)
+                                        @forelse($pet->bookings as $booking)
                                             <tr>
-                                                <td>{{ $booking->start_date ? $booking->start_date->format('Y-m-d H:i') : 'N/A' }}</td>
-                                                <td>{{ $booking->end_date ? $booking->end_date->format('Y-m-d H:i') : 'N/A' }}</td>
+                                                <td>{{ $booking->from ? \Carbon\Carbon::parse($booking->from . ' ' . $booking->from_time)->format('Y-m-d H:i') : 'N/A' }}</td>
+                                                <td>{{ $booking->to ? \Carbon\Carbon::parse($booking->to . ' ' . $booking->to_time)->format('Y-m-d H:i') : 'N/A' }}</td>
                                                 <td>{{ $booking->hours ?? 0 }}</td>
                                                 <td>{{ $booking->credits ?? 0 }}</td>
                                                 <td>
@@ -257,15 +249,15 @@
                                                     @else
                                                         <span class="badge bg-warning">Pending</span>
                                                     @endif
-                                                </td>
-                                            </tr>
+                                    </td>
+                                </tr>
                                         @empty
                                             <tr>
                                                 <td colspan="5" class="text-center">No bookings found for this pet.</td>
-                                            </tr>
+                                </tr>
                                         @endforelse
-                                    </tbody>
-                                </table>
+                            </tbody>
+                        </table>
                             </div>
                         </div>
                     </div>

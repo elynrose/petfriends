@@ -64,7 +64,7 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('frontend.requests.*') ? 'active' : '' }}" href="{{ route('frontend.requests.index') }}">
-                                    <i class="fas fa-inbox"></i> Member Requests
+                                    <i class="fas fa-inbox"></i> Booking Requests
                                 </a>
                             </li>
                             <li class="nav-item">
