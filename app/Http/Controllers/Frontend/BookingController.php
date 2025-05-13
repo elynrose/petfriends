@@ -205,6 +205,15 @@ class BookingController extends Controller
                 $booking
             );
 
+            // Set pet as unavailable and clear booking dates
+            $pet = $booking->pet;
+            $pet->not_available = true;
+            $pet->from = null;
+            $pet->from_time = null;
+            $pet->to = null;
+            $pet->to_time = null;
+            $pet->save();
+
             DB::commit();
 
             return redirect()->route('frontend.requests.index')
