@@ -145,7 +145,15 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Hours</h6>
-                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('hours') ?? 0 }}</h3>
+                                                        <h3 class="display-4">
+                                                            @php
+                                                                $creditService = app(App\Services\CreditService::class);
+                                                                $totalHours = $pet->bookings->where('status', 'completed')->sum(function($booking) use ($creditService) {
+                                                                    return $creditService->calculateBookingHours($booking);
+                                                                });
+                                                            @endphp
+                                                            {{ $totalHours }}
+                                                        </h3>
                                                         <p class="text-muted small">Completed Bookings</p>
                                                     </div>
                                                 </div>
@@ -154,7 +162,7 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Credits</h6>
-                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('credits') ?? 0 }}</h3>
+                                                        <h3 class="display-4">{{ $totalHours }}</h3>
                                                         <p class="text-muted small">Used Credits</p>
                                                     </div>
                                                 </div>

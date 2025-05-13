@@ -20,7 +20,7 @@ class PetReview extends Model
     ];
 
     protected $fillable = [
-        'rating',
+        'score',
         'comment',
         'pet_id',
         'booking_id',

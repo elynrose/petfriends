@@ -13,6 +13,28 @@
                     </div>
                 </div>
 
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
                 <div class="card-body">
                     @if($bookings && $bookings->count() > 0)
                         <div class="row mb-4">
@@ -78,6 +100,7 @@
                                                             ))) }}">
                                                             {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
                                                         </span>
+                                                        
                                                     </div>
                                                     <div class="btn-group">
                                                         @if($booking->status === 'pending')
@@ -108,7 +131,7 @@
                                                             </form>
                                                         @endif
                                                         @if($booking->status === 'completed' && !$booking->review)
-                                                            <a href="{{ route('frontend.pet_reviews.create', ['booking' => $booking->id]) }}" 
+                                                            <a href="{{ route('frontend.pet-reviews.create', $booking->id) }}" 
                                                                class="btn btn-outline-primary btn-sm">
                                                                 <i class="fas fa-star"></i> Review
                                                             </a>
@@ -163,7 +186,7 @@
                                                                         <strong>Your Review:</strong>
                                                                         <div class="stars">
                                                                             @for($i = 1; $i <= 5; $i++)
-                                                                                <i class="fas fa-star {{ $i <= $booking->review->rating ? 'text-warning' : 'text-muted' }}"></i>
+                                                                                <i class="fas fa-star {{ $i <= $booking->review->score ? 'text-warning' : 'text-muted' }}"></i>
                                                                             @endfor
                                                                         </div>
                                                                         <p class="mb-0 mt-2">{{ $booking->review->comment }}</p>

@@ -125,8 +125,18 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::put('bookings/{booking}/complete', 'BookingController@complete')->name('bookings.complete');
 
     // Pet Reviews
-    Route::delete('pet-reviews/destroy', 'PetReviewsController@massDestroy')->name('pet-reviews.massDestroy');
-    Route::resource('pet-reviews', 'PetReviewsController');
+    Route::prefix('pet-reviews')->name('pet-reviews.')->group(function () {
+        Route::get('create/{booking}', 'PetReviewsController@create')->name('create');
+        Route::post('store', 'PetReviewsController@store')->name('store');
+        Route::delete('destroy', 'PetReviewsController@massDestroy')->name('massDestroy');
+        Route::resource('/', 'PetReviewsController', ['names' => [
+            'index' => 'index',
+            'show' => 'show',
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]])->except(['create', 'store']);
+    });
 
     // Chat
     Route::delete('chats/destroy', 'ChatController@massDestroy')->name('chats.massDestroy');
@@ -157,9 +167,6 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('frontend/profile/destroy', 'ProfileController@destroy')->name('profile.destroy');
     Route::post('frontend/profile/password', 'ProfileController@password')->name('profile.password');
     Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
-
-    Route::post('pet-reviews', 'ReviewController@store')->name('pet_reviews.store');
-    Route::get('pet-reviews/create', 'ReviewController@create')->name('pet_reviews.create');
 
     Route::get('credit-logs', [App\Http\Controllers\Frontend\CreditLogController::class, 'index'])->name('credit-logs.index');
 });

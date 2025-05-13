@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class AddUserIdToPetReviewsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('pet_reviews', function (Blueprint $table) {
             if (!Schema::hasColumn('pet_reviews', 'user_id')) {
-                $table->foreignId('user_id')->nullable()->after('id')->constrained();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->foreign('user_id', 'pet_reviews_user_id_fk')->references('id')->on('users');
             }
-            $table->renameColumn('score', 'rating');
         });
     }
 
@@ -25,9 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pet_reviews', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
+            $table->dropForeign('pet_reviews_user_id_fk');
             $table->dropColumn('user_id');
-            $table->renameColumn('rating', 'score');
         });
     }
-}; 
+} 

@@ -12,6 +12,7 @@ use App\Models\PetReview;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
 class PetReviewsController extends Controller
 {
@@ -24,22 +25,62 @@ class PetReviewsController extends Controller
         return view('frontend.petReviews.index', compact('petReviews'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        abort_if(Gate::denies('pet_review_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $booking = Booking::findOrFail($request->booking);
 
-        $pets = Pet::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+        // Check if the booking is completed and belongs to the user
+        if ($booking->status !== 'completed' || $booking->user_id !== Auth::id()) {
+            return redirect()->route('frontend.bookings.index')
+                ->with('error', 'You can only review completed bookings that you made.');
+        }
 
-        $bookings = Booking::pluck('status', 'id')->prepend(trans('global.pleaseSelect'), '');
+        // Check if a review already exists
+        if ($booking->review) {
+            return redirect()->route('frontend.bookings.index')
+                ->with('error', 'You have already reviewed this booking.');
+        }
 
-        return view('frontend.petReviews.create', compact('bookings', 'pets'));
+        return view('frontend.pet_reviews.create', compact('booking'));
     }
 
-    public function store(StorePetReviewRequest $request)
+    public function store(Request $request)
     {
-        $petReview = PetReview::create($request->all());
+        $request->validate([
+            'booking_id' => 'required|exists:bookings,id',
+            'score' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
+        ]);
 
-        return redirect()->route('frontend.pet-reviews.index');
+        $booking = Booking::findOrFail($request->booking_id);
+
+        // Check if the booking is completed and belongs to the user
+        if ($booking->status !== 'completed' || $booking->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You can only review completed bookings that you made.');
+        }
+
+        // Check if a review already exists
+        if ($booking->review) {
+            return redirect()->back()->with('error', 'You have already reviewed this booking.');
+        }
+
+        try {
+            // Create the review
+            PetReview::create([
+                'booking_id' => $booking->id,
+                'user_id' => Auth::id(),
+                'pet_id' => $booking->pet_id,
+                'score' => (int) $request->score,
+                'comment' => $request->comment,
+            ]);
+
+            return redirect()->route('frontend.bookings.index')
+                ->with('success', 'Thank you for your review!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error creating review: ' . $e->getMessage());
+        }
     }
 
     public function edit(PetReview $petReview)
