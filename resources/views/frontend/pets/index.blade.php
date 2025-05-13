@@ -1,5 +1,17 @@
 @extends('layouts.frontend')
 @section('content')
+<style>
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .card-img-top img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+</style>
 <div class="container">
     <div class="row justify-content-center">
         <div class=" card col-md-12">
@@ -8,7 +20,7 @@
                             <h5>{{ $pets->count() }} pet(s) found</h5>
                            <a href="{{ route('frontend.pets.create') }}" class="btn btn-success mt-3">{{ trans('global.add') }} {{ trans('cruds.pet.title_singular') }}</a>
                        
-                        </div>
+                </div>
 
             <div class="row">
                 @if($pets->count() > 0)
@@ -18,15 +30,15 @@
                             
                             <div class="card-img-top" style="position:relative;">
                             @if($pet->user_id === Auth::user()->id)
-                                        @can('pet_delete')
+                                            @can('pet_delete')
                                             <form action="{{ route('frontend.pets.destroy', $pet->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="position:absolute; top:10px; right:10px; z-index: 11;">
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn btn-xs btn-default" value="{{ trans('global.delete') }}">
                                                    <i class="fa fa-trash"></i>
                                                 </button>
-                                            </form>
-                                        @endcan
+                                                </form>
+                                            @endcan
                                         @endif
 
                                         @if($pet->bookings_count > 0)
@@ -52,6 +64,13 @@
                                     <strong>{{ trans('cruds.pet.fields.age') }}:</strong> {{ $pet->age ?? '' }}<br>
                                     <strong>{{ trans('cruds.pet.fields.gender') }}:</strong> {{ App\Models\Pet::GENDER_SELECT[$pet->gender] ?? '' }}<br>
                                     <strong>@if($pet->not_available==true)<i class="fa fa-stop-circle text-danger"></i> {{ trans('cruds.pet.fields.not_available') }} @else <i class="fa fa-check-circle text-success"></i> {{ trans('cruds.pet.fields.available') }} @endif</strong> 
+                                    @if(!$pet->not_available)
+                                        @php
+                                            $creditService = app(App\Services\CreditService::class);
+                                            $hours = $creditService->calculatePetAvailabilityHours($pet);
+                                        @endphp
+                                        <br><strong>Credits to use:</strong> -{{ $hours }} credits
+                                    @endif
                                 </p>
                                 <div class="btn-group">
 
@@ -70,9 +89,9 @@
                     </div>
                 @endif
             </div>
-        </div>
-    </div>
-</div>
+                    </div>
+                </div>
+            </div>
 
 <!-- Create Pet Modal -->
 <div class="modal fade" id="createPetModal" tabindex="-1" role="dialog" aria-labelledby="createPetModalLabel" aria-hidden="true">
@@ -278,16 +297,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    .card-img-top {
-        height: 200px;
-        object-fit: cover;
-        position: relative;
-    }
-    .card-img-top img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
     }
 </style>
 @endsection

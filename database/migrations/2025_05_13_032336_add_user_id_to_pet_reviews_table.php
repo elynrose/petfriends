@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pet_reviews', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            if (!Schema::hasColumn('pet_reviews', 'user_id')) {
+                $table->foreignId('user_id')->nullable()->after('id')->constrained();
+            }
             $table->renameColumn('score', 'rating');
         });
     }

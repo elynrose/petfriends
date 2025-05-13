@@ -67,7 +67,11 @@
                                     <i class="fas fa-inbox"></i> Booking Requests
                                 </a>
                             </li>
-                            
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.credit-logs.*') ? 'active' : '' }}" href="{{ route('frontend.credit-logs.index') }}">
+                                    <i class="fas fa-history"></i> Credit History
+                                </a>
+                            </li>
                         @endguest
                     </ul>
 

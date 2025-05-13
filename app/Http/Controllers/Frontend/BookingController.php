@@ -16,6 +16,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\CreditService;
 
 class BookingController extends Controller
 {
@@ -161,29 +162,30 @@ class BookingController extends Controller
                 ->with('error', 'This booking is already completed.');
         }
 
-        // Update the end time to current date and time but the current date must be greater than the from date
-        if (Carbon::parse($booking->from)->isPast()) {
+        try {
+            // Update the end time to current date and time
+            $booking->to = Carbon::now()->format('Y-m-d');
+            $booking->to_time = Carbon::now()->format('H:i');
+            $booking->save();
+
+            // Use the complete() method which handles credit awarding
+            if ($booking->complete()) {
+                // Get credit service instance
+                $creditService = app(CreditService::class);
+                
+                // Calculate hours using the service
+                $hours = $creditService->calculateBookingHours($booking);
+
+                return redirect()->route('frontend.bookings.index')
+                    ->with('success', "Booking completed successfully. You provided {$hours} hours of care and earned {$hours} credits.");
+            }
+
             return redirect()->route('frontend.bookings.index')
-                ->with('error', 'Booking start date must be greater than the current date.');
-        }
-
-        $booking->to = Carbon::now()->format('Y-m-d');
-        $booking->to_time = Carbon::now()->format('H:i');
-        $booking->save();
-
-        // Calculate hours of care provided
-        $start = Carbon::parse($booking->from . ' ' . $booking->from_time);
-        $end = Carbon::parse($booking->to . ' ' . $booking->to_time);
-        $hours = ceil($end->diffInMinutes($start) / 60);
-
-        // Use the complete() method which handles credit awarding
-        if ($booking->complete()) {
+                ->with('error', 'Failed to complete booking.');
+        } catch (\Exception $e) {
             return redirect()->route('frontend.bookings.index')
-                ->with('success', "Booking completed successfully. You provided {$hours} hours of care and earned {$hours} credits.");
+                ->with('error', 'Error completing booking: ' . $e->getMessage());
         }
-
-        return redirect()->route('frontend.bookings.index')
-            ->with('error', 'Failed to complete booking.');
     }
 
 

@@ -11,6 +11,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Notifications\Notifiable;
 use App\Services\CreditService;
+use Carbon\Carbon;
 
 class Booking extends Model implements HasMedia
 {
@@ -113,12 +114,40 @@ class Booking extends Model implements HasMedia
     public function complete()
     {
         if ($this->status !== 'completed') {
+            // Load necessary relationships
+            $this->load(['pet.owner', 'user']);
+            
+            if (!$this->pet || !$this->pet->owner) {
+                throw new \Exception('Pet or pet owner not found for this booking.');
+            }
+
+            if (!$this->user) {
+                throw new \Exception('Caregiver not found for this booking.');
+            }
+
             $this->status = 'completed';
             $this->save();
 
-            // Award credits to the user
+            // Get credit service instance
             $creditService = app(CreditService::class);
-            $creditService->awardCreditsForBooking($this->user, $this);
+            
+            // Calculate hours using the service
+            $hours = $creditService->calculateBookingHours($this);
+
+            // Transfer credits from pet owner to caregiver
+            // Deduct credits from pet owner
+            $this->pet->owner->deductCredits(
+                $hours,
+                "Credits deducted for {$hours} hours of pet care by {$this->user->name}",
+                $this
+            );
+
+            // Award credits to caregiver
+            $this->user->addCredits(
+                $hours,
+                "Credits earned for {$hours} hours of pet care for {$this->pet->name}",
+                $this
+            );
 
             return true;
         }

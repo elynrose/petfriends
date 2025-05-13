@@ -8,7 +8,7 @@
                     {{ session('error') }}
                 </div>
             @endif
-            
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">{{ $pet->name }}</h4>
@@ -107,17 +107,57 @@
                                                 </p>
                                             </div>
                                             <div class="col-md-6">
+                                            <p class="mb-2">
+                                                    <strong>@if($pet->not_available==true)<i class="fa fa-stop-circle text-danger"> </i> {{ trans('cruds.pet.fields.not_available') }} @else <i class="fa fa-check-circle text-success"></i> {{ trans('cruds.pet.fields.available') }} @endif </strong> 
+                                                </p>
                                                 <p class="mb-2">
                                                     <strong><i class="fas fa-calendar-alt mr-2"></i>Available From:</strong><br>
-                                                    {{ \Carbon\Carbon::parse($pet->from)->format('M d, Y') }} {{ $pet->from_time ? \Carbon\Carbon::parse($pet->from_time)->format('H:i') : '' }}                                                </p>
+                                                    @if($pet->from)
+                                                        {{ \Carbon\Carbon::parse($pet->from)->format('M d, Y') }}
+                                                        @if($pet->from_time)
+                                                            {{ \Carbon\Carbon::parse($pet->from_time)->format('H:i') }}
+                                                        @endif
+                                                    @else
+                                                        Not specified
+                                                    @endif
+                                                </p>
                                                 <p class="mb-2">
                                                     <strong><i class="fas fa-calendar-alt mr-2"></i>Available To:</strong><br>
-                                                    {{ \Carbon\Carbon::parse($pet->to)->format('M d, Y') }} {{ $pet->to_time ? \Carbon\Carbon::parse($pet->to_time)->format('H:i') : '' }}
+                                                    @if($pet->to)
+                                                        {{ \Carbon\Carbon::parse($pet->to)->format('M d, Y') }}
+                                                        @if($pet->to_time)
+                                                            {{ \Carbon\Carbon::parse($pet->to_time)->format('H:i') }}
+                                                        @endif
+                                                    @else
+                                                        Not specified
+                                                    @endif
                                                 </p>
-                                                <p class="mb-2">
-                                                    <strong>@if($pet->not_available==true)<i class="fa fa-stop-circle text-danger"> </i> {{ trans('cruds.pet.fields.not_available') }} @else <i class="fa fa-check-circle text-success"></i> {{ trans('cruds.pet.fields.available') }} @endif </strong> 
+                                             
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                                </p>
+                                    <!-- Hours and Credits Summary -->
+                                    <div class="mb-4">
+                                        <h5 class="card-title">Usage Statistics</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card bg-light mb-3">
+                                                    <div class="card-body text-center">
+                                                        <h6 class="card-title">Total Hours</h6>
+                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('hours') ?? 0 }}</h3>
+                                                        <p class="text-muted small">Completed Bookings</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card bg-light mb-3">
+                                                    <div class="card-body text-center">
+                                                        <h6 class="card-title">Total Credits</h6>
+                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('credits') ?? 0 }}</h3>
+                                                        <p class="text-muted small">Used Credits</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -154,32 +194,70 @@
                                         </div>
 
                                         <div class="text-center mt-4">
-                                        <form method="POST" action="{{ route("frontend.bookings.store") }}" enctype="multipart/form-data" id="booking-form">
-                        @method('POST')
-                        @csrf
-                       
-                        <div class="row">
-                            
-                        </div>
-                      
-                        <div class="form-group">
-                            <input type="hidden" name="status" value="pending">
-                            <input type="hidden" name="from" value="{{ $pet->from }}">
-                            <input type="hidden" name="to" value="{{ $pet->to }}">
-                            <input type="hidden" name="from_time" value="{{ \Carbon\Carbon::parse($pet->from_time)->format('H:i') }}">
-                            <input type="hidden" name="to_time" value="{{ \Carbon\Carbon::parse($pet->to_time)->format('H:i') }}">
-                            <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
-                            <input type="hidden" name="pet_id" value="{{ $pet->id }}">
-                            @if(Auth::user()->id !== $pet->user_id)
-                            <button class="btn btn-primary btn-lg" type="submit">
-                                {{ trans('global.book') }}
-                            </button>
-                            @endif
-                        </div>
-                    </form>
+                                            <form method="POST" action="{{ route("frontend.bookings.store") }}" enctype="multipart/form-data" id="booking-form">
+                                                @method('POST')
+                                                @csrf
+                                                <div class="form-group">
+                                                    <input type="hidden" name="status" value="pending">
+                                                    <input type="hidden" name="from" value="{{ $pet->from }}">
+                                                    <input type="hidden" name="to" value="{{ $pet->to }}">
+                                                    <input type="hidden" name="from_time" value="{{ $pet->from_time ? \Carbon\Carbon::parse($pet->from_time)->format('H:i') : '' }}">
+                                                    <input type="hidden" name="to_time" value="{{ $pet->to_time ? \Carbon\Carbon::parse($pet->to_time)->format('H:i') : '' }}">
+                                                    <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
+                                                    <input type="hidden" name="pet_id" value="{{ $pet->id }}">
+                                                    @if(Auth::user()->id !== $pet->user_id)
+                                                        <button class="btn btn-primary btn-lg" type="submit">
+                                                            {{ trans('global.book') }}
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </form>
                                         </div>
                                     @endif
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Bookings -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Recent Bookings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Hours</th>
+                                            <th>Credits</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($pet->bookings->sortByDesc('start_date') as $booking)
+                                            <tr>
+                                                <td>{{ $booking->start_date ? $booking->start_date->format('Y-m-d H:i') : 'N/A' }}</td>
+                                                <td>{{ $booking->end_date ? $booking->end_date->format('Y-m-d H:i') : 'N/A' }}</td>
+                                                <td>{{ $booking->hours ?? 0 }}</td>
+                                                <td>{{ $booking->credits ?? 0 }}</td>
+                                                <td>
+                                                    @if($booking->completed)
+                                                        <span class="badge bg-success">Completed</span>
+                                                    @else
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center">No bookings found for this pet.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -223,6 +301,14 @@
         font-size: 0.75em;
         font-weight: bold;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .display-4 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        line-height: 1.2;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
     }
 </style>
 @endsection

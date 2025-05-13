@@ -107,42 +107,162 @@ class PetController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // If setting availability (not_available is false), check credits
+        // Validate date range
+        $start = Carbon::parse($request->input('from') . ' ' . $request->input('from_time'));
+        $end = Carbon::parse($request->input('to') . ' ' . $request->input('to_time'));
+
+        if ($start->isPast() || $end->isPast()) {
+            return redirect()->back()
+                ->with('error', 'Booking dates must be in the future.');
+        }
+
+        if ($end->lte($start)) {
+            return redirect()->back()
+                ->with('error', 'End date and time must be after start date and time.');
+        }
+
+        // Validate booking duration
+        $durationInHours = ceil($end->diffInMinutes($start) / 60);
+        $minDuration = 1; // Minimum 1 hour
+
+        if ($durationInHours < $minDuration) {
+            return redirect()->back()
+                ->with('error', "Booking duration must be at least {$minDuration} hour.");
+        }
+
+        // Validate time of day (e.g., no bookings between 10 PM and 6 AM)
+        $startHour = $start->hour;
+        $endHour = $end->hour;
+        if ($startHour < 6 || $startHour >= 22 || $endHour < 6 || $endHour >= 22) {
+            return redirect()->back()
+                ->with('error', 'Bookings are only allowed between 6 AM and 10 PM.');
+        }
+
+        // Handle existing pending booking update
+        $existingBooking = $pet->bookings()
+            ->where('status', 'pending')
+            ->where('from', $request->input('from'))
+            ->where('to', $request->input('to'))
+            ->first();
+
+        // Check for overlapping bookings
+        $overlappingBooking = $pet->bookings()
+            ->where('status', '!=', 'rejected')
+            ->where('status', '!=', 'completed')
+            ->where(function ($query) use ($start, $end) {
+                $query->where(function ($q) use ($start, $end) {
+                    $q->where('from', '<=', $end->format('Y-m-d'))
+                      ->where('to', '>=', $start->format('Y-m-d'));
+                });
+            })
+            ->where('id', '!=', $request->input('booking_id', 0))
+            ->where('id', '!=', $existingBooking?->id) // Exclude the current booking being updated
+            ->first();
+
+        if ($overlappingBooking) {
+            return redirect()->back()
+                ->with('error', 'This time period overlaps with an existing booking.');
+        }
+
+        // Handle credit calculations
         if (!$request->input('not_available')) {
             $user = Auth::user();
-            $start = Carbon::parse($request->input('from') . ' ' . $request->input('from_time'));
-            $end = Carbon::parse($request->input('to') . ' ' . $request->input('to_time'));
-            
-            // Calculate required credits (hours rounded up)
-            $requiredCredits = ceil($end->diffInMinutes($start) / 60);
-            
-            if (!$user->hasEnoughCredits($requiredCredits)) {
-                return redirect()->back()
-                    ->with('error', "You need {$requiredCredits} credits to set this availability period. You currently have {$user->credits} credits.");
-            }
-            
-            // Deduct credits
-            $user->deductCredits($requiredCredits);
-        }
+            $newHours = ceil($end->diffInMinutes($start) / 60);
 
-        $pet->update($request->all());
+            // If pet was previously available, calculate the difference
+            if (!$pet->not_available) {
+                $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
+                $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);
+                $oldHours = ceil($oldEnd->diffInMinutes($oldStart) / 60);
+                $hourDifference = $newHours - $oldHours;
 
-        if (count($pet->photo) > 0) {
-            foreach ($pet->photo as $media) {
-                if (! in_array($media->file_name, $request->input('photo', []))) {
-                    $media->delete();
+                if ($hourDifference > 0) {
+                    // Extending availability - need more credits
+                    if (!$user->hasEnoughCredits($hourDifference)) {
+                        return redirect()->back()
+                            ->with('error', "You need {$hourDifference} additional credits to extend availability for {$pet->name}. You currently have {$user->credits} credits.");
+                    }
+                    $user->deductCredits($hourDifference, "Extended availability for {$pet->name} by {$hourDifference} hours");
+                    $message = "Successfully extended availability and deducted {$hourDifference} credits.";
+                } elseif ($hourDifference < 0) {
+                    // Reducing availability - refund credits
+                    $refundAmount = abs($hourDifference);
+                    $user->refundCredits($refundAmount, "Reduced availability for {$pet->name} by {$refundAmount} hours");
+                    $message = "Successfully reduced availability and refunded {$refundAmount} credits.";
+                } else {
+                    $message = "Availability period updated with no change in credits.";
                 }
+            } else {
+                // Pet was not available before - charge full duration
+                if (!$user->hasEnoughCredits($newHours)) {
+                    return redirect()->back()
+                        ->with('error', "You need {$newHours} credits to make {$pet->name} available for this duration. You currently have {$user->credits} credits.");
+                }
+                $user->deductCredits($newHours, "New availability period for {$pet->name} ({$newHours} hours)");
+                $message = "Successfully made {$pet->name} available and deducted {$newHours} credits.";
+            }
+        } else {
+            // If pet is being marked as not available and was previously available
+            if (!$pet->not_available) {
+                $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
+                $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);
+                $oldHours = ceil($oldEnd->diffInMinutes($oldStart) / 60);
+                
+                // Refund credits
+                $user = Auth::user();
+                $user->refundCredits($oldHours, "Marked {$pet->name} as not available, refunding {$oldHours} hours of availability");
+                $message = "Successfully marked {$pet->name} as not available and refunded {$oldHours} credits.";
+            } else {
+                $message = "Pet status updated.";
             }
         }
-        $media = $pet->photo->pluck('file_name')->toArray();
-        foreach ($request->input('photo', []) as $file) {
-            if (count($media) === 0 || ! in_array($file, $media)) {
-                $pet->addMedia(storage_path('tmp/uploads/' . basename($file)))->toMediaCollection('photo');
-            }
-        }
+
+        // Update pet information
+        $pet->update([
+            'name' => $request->input('name'),
+            'type' => $request->input('type'),
+            'age' => $request->input('age'),
+            'gender' => $request->input('gender'),
+            'not_available' => $request->input('not_available'),
+            'from' => $request->input('from'),
+            'from_time' => $request->input('from_time'),
+            'to' => $request->input('to'),
+            'to_time' => $request->input('to_time')
+        ]);
+
+        // Handle media updates more efficiently
+        $this->handleMediaUpdates($pet, $request);
 
         return redirect()->route('frontend.pets.index')
-            ->with('message', trans('global.pet_updated'));
+            ->with('message', $message ?? trans('global.pet_updated'));
+    }
+
+    /**
+     * Handle media updates for the pet
+     *
+     * @param Pet $pet
+     * @param Request $request
+     * @return void
+     */
+    private function handleMediaUpdates(Pet $pet, Request $request): void
+    {
+        $currentPhotos = $pet->photo->pluck('file_name')->toArray();
+        $newPhotos = $request->input('photo', []);
+        
+        // Delete removed photos
+        $pet->photo->each(function ($media) use ($newPhotos) {
+            if (!in_array($media->file_name, $newPhotos)) {
+                $media->delete();
+            }
+        });
+
+        // Add new photos
+        foreach ($newPhotos as $file) {
+            if (!in_array($file, $currentPhotos)) {
+                $pet->addMedia(storage_path('tmp/uploads/' . basename($file)))
+                    ->toMediaCollection('photo');
+            }
+        }
     }
 
     public function show(Pet $pet)

@@ -161,6 +161,8 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
 
     Route::post('pet-reviews', 'ReviewController@store')->name('pet_reviews.store');
     Route::get('pet-reviews/create', 'ReviewController@create')->name('pet_reviews.create');
+
+    Route::get('credit-logs', [App\Http\Controllers\Frontend\CreditLogController::class, 'index'])->name('credit-logs.index');
 });
 
 // Two Factor Authentication routes

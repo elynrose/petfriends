@@ -40,6 +40,7 @@ class HomeController
                       ->orWhere('from', '<=', $dateFrom);
                 });
             })
+         
             ->when(request('date_to'), function($q) {
                 $dateTo = Carbon::parse(request('date_to'))->format('Y-m-d');
                 return $q->where(function($q) use ($dateTo) {

@@ -268,20 +268,51 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         $this->attributes['two_factor_expires_at'] = $value ? Carbon::createFromFormat(config('panel.date_format') . ' ' . config('panel.time_format'), $value)->format('Y-m-d H:i:s') : null;
     }
 
-    public function addCredits(int $hours)
+    public function addCredits($amount, $description = 'Credits added', $booking = null)
     {
-        $this->credits += $hours;
+        $this->credits += $amount;
         $this->save();
+
+        // Log the transaction
+        $this->creditLogs()->create([
+            'amount' => $amount,
+            'type' => 'add',
+            'description' => $description,
+            'booking_id' => $booking ? $booking->id : null,
+        ]);
     }
 
-    public function deductCredits(int $credits)
+    public function deductCredits($amount, $description = 'Credits deducted', $booking = null)
     {
-        if ($this->credits >= $credits) {
-            $this->credits -= $credits;
-            $this->save();
-            return true;
-        }
-        return false;
+        $this->credits -= $amount;
+        $this->save();
+
+        // Log the transaction
+        $this->creditLogs()->create([
+            'amount' => $amount,
+            'type' => 'deduct',
+            'description' => $description,
+            'booking_id' => $booking ? $booking->id : null,
+        ]);
+    }
+
+    public function refundCredits($amount, $description = 'Credits refunded', $booking = null)
+    {
+        $this->credits += $amount;
+        $this->save();
+
+        // Log the transaction
+        $this->creditLogs()->create([
+            'amount' => $amount,
+            'type' => 'refund',
+            'description' => $description,
+            'booking_id' => $booking ? $booking->id : null,
+        ]);
+    }
+
+    public function creditLogs()
+    {
+        return $this->hasMany(CreditLog::class);
     }
 
     public function hasEnoughCredits(int $credits)

@@ -1,6 +1,18 @@
 @extends('layouts.frontend')
 
 @section('content')
+<style>
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .card-img-top img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+</style>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-12">
@@ -68,18 +80,24 @@
                                     @endforeach
                                 </div>
                                 <div class="card-body">
-                                    <h5 class="card-title">{{ $pet->name }}</h5>
+                                    <h5 class="card-title">{{ $pet->name }} <span class="badge badge-pill badge-default"><strong>@if($pet->not_available==true)<i class="fa fa-stop-circle text-danger"> </i> {{ trans('cruds.pet.fields.not_available') }} @else <i class="fa fa-check-circle text-success"></i> {{ trans('cruds.pet.fields.available') }} @endif </strong> 
+                                    </span>
+                                    </h5>
                                     <p class="card-text">
+
                                         <strong>{{ trans('cruds.pet.fields.gender') }}:</strong> {{ App\Models\Pet::GENDER_SELECT[$pet->gender] ?? '' }}<br>
                                         <strong>Location:</strong> {{ $pet->user->zip_code ?? 'N/A' }}<br>
-                                        <strong>@if($pet->not_available==true)<i class="fa fa-stop-circle text-danger"> </i> {{ trans('cruds.pet.fields.not_available') }} @else <i class="fa fa-check-circle text-success"></i> {{ trans('cruds.pet.fields.available') }} @endif </strong> 
-                                        <br>
                                         @if($pet->from || $pet->to)
                                             <strong>Available:</strong> 
                                             {{ $pet->from ? date('M d, Y', strtotime($pet->from)) : 'Any time' }} 
                                             to 
                                             {{ $pet->to ? date('M d, Y', strtotime($pet->to)) : 'Any time' }}
                                         @endif
+                                    <br>
+                                        @php
+                                            $creditService = app(App\Services\CreditService::class);
+                                        @endphp
+                                        <strong>Credits:</strong> {{ $creditService->calculatePetAvailabilityHours($pet) }} credits
                                     </p>
                                     <div class="btn-group">
                                         @can('pet_show')

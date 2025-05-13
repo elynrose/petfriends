@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Carbon\Carbon;
+use App\Services\CreditService;
 
 class BookingCompleted extends Notification implements ShouldQueue
 {
@@ -38,10 +39,11 @@ class BookingCompleted extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        // Calculate hours of care provided
-        $start = Carbon::parse($this->booking->from . ' ' . $this->booking->from_time);
-        $end = Carbon::parse($this->booking->to . ' ' . $this->booking->to_time);
-        $hours = ceil($end->diffInMinutes($start) / 60);
+        // Get credit service instance
+        $creditService = app(CreditService::class);
+        
+        // Calculate hours using the service
+        $hours = $creditService->calculateBookingHours($this->booking);
 
         return (new MailMessage)
             ->subject('Booking Completed')

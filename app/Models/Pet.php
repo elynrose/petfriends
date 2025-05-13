@@ -44,7 +44,6 @@ class Pet extends Model implements HasMedia
         'name',
         'age',
         'gender',
-        'notes',
         'not_available',
         'from',
         'from_time',
