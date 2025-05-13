@@ -27,9 +27,15 @@ class BookingController extends Controller
 
         $bookings = Booking::with(['pet', 'user', 'media'])
         ->where('user_id', auth()->id())
+        ->orderBy('status', 'desc')
         ->get();
 
-        return view('frontend.bookings.index', compact('bookings'));
+        //Pending bookings count
+        $pendingBookingsCount = Booking::where('user_id', auth()->id())
+        ->where('status', 'pending')
+        ->count();
+
+        return view('frontend.bookings.index', compact('bookings', 'pendingBookingsCount'));
     }
 
     public function create()
@@ -155,10 +161,25 @@ class BookingController extends Controller
                 ->with('error', 'This booking is already completed.');
         }
 
+        // Update the end time to current date and time but the current date must be greater than the from date
+        if (Carbon::parse($booking->from)->isPast()) {
+            return redirect()->route('frontend.bookings.index')
+                ->with('error', 'Booking start date must be greater than the current date.');
+        }
+
+        $booking->to = Carbon::now()->format('Y-m-d');
+        $booking->to_time = Carbon::now()->format('H:i');
+        $booking->save();
+
+        // Calculate hours of care provided
+        $start = Carbon::parse($booking->from . ' ' . $booking->from_time);
+        $end = Carbon::parse($booking->to . ' ' . $booking->to_time);
+        $hours = ceil($end->diffInMinutes($start) / 60);
+
         // Use the complete() method which handles credit awarding
         if ($booking->complete()) {
             return redirect()->route('frontend.bookings.index')
-                ->with('success', 'Booking completed successfully. Credits have been awarded.');
+                ->with('success', "Booking completed successfully. You provided {$hours} hours of care and earned {$hours} credits.");
         }
 
         return redirect()->route('frontend.bookings.index')

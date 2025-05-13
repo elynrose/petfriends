@@ -10,7 +10,7 @@
                     @if($bookings)
                         <div class="text-center py-5">
                             <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
-                            <h5>{{ $bookings->count() }} Upcoming booking(s) found</h5>
+                            <h5>{{ $pendingBookingsCount }} Upcoming pet date(s) found</h5>
                             <p class="text-muted"></p>
                        
                         </div>
