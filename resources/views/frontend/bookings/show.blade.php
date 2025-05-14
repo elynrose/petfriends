@@ -212,7 +212,7 @@
 </style>
 @endpush
 
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const chatContainer = document.querySelector('.chat-container');
@@ -372,5 +372,5 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('focus', markMessagesAsRead);
 });
 </script>
-@endpush
+@endsection
 @endsection
