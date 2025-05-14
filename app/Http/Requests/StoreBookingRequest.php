@@ -17,20 +17,33 @@ class StoreBookingRequest extends FormRequest
 
     public function rules()
     {
-        return [
+        $rules = [
             'pet_id' => [
                 'required',
                 'integer',
             ],
-            'from' => [
+            'status' => [
+                'required',
+                'in:pending,approved,rejected,completed,new',
+            ],
+            'user_id' => [
+                'required',
+                'integer',
+            ],
+        ];
+
+        // Only require dates if the pet is available
+        $pet = \App\Models\Pet::find($this->input('pet_id'));
+        if (!$pet || !$pet->not_available) {
+            $rules['from'] = [
                 'required',
                 'date',
-            ],
-            'from_time' => [
+            ];
+            $rules['from_time'] = [
                 'required',
                 'regex:/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/',
-            ],
-            'to' => [
+            ];
+            $rules['to'] = [
                 'required',
                 'date',
                 'after_or_equal:from',
@@ -42,8 +55,8 @@ class StoreBookingRequest extends FormRequest
                         $fail('The booking end date cannot be in the past.');
                     }
                 },
-            ],
-            'to_time' => [
+            ];
+            $rules['to_time'] = [
                 'required',
                 'regex:/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/',
                 function ($attribute, $value, $fail) {
@@ -54,16 +67,10 @@ class StoreBookingRequest extends FormRequest
                         $fail('The end date and time must be after the start date and time.');
                     }
                 },
-            ],
-            'status' => [
-                'required',
-                'in:pending,approved,rejected,completed,new',
-            ],
-            'user_id' => [
-                'required',
-                'integer',
-            ],
-        ];
+            ];
+        }
+
+        return $rules;
     }
 
     public function messages()

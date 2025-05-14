@@ -107,7 +107,14 @@ class PetController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Validate date range
+        // If pet is not available, skip date validation
+        if ($request->input('not_available')) {
+            $pet->update($request->all());
+            return redirect()->route('frontend.pets.index')
+                ->with('success', 'Pet updated successfully.');
+        }
+
+        // Validate date range only if pet is available
         $start = Carbon::parse($request->input('from') . ' ' . $request->input('from_time'));
         $end = Carbon::parse($request->input('to') . ' ' . $request->input('to_time'));
 
@@ -145,7 +152,6 @@ class PetController extends Controller
             ->where('to', $request->input('to'))
             ->first();
 
-        // Check for overlapping bookings
         $overlappingBooking = $pet->bookings()
             ->where('status', '!=', 'rejected')
             ->where('status', '!=', 'completed')
@@ -156,7 +162,7 @@ class PetController extends Controller
                 });
             })
             ->where('id', '!=', $request->input('booking_id', 0))
-            ->where('id', '!=', $existingBooking?->id) // Exclude the current booking being updated
+            ->where('id', '!=', $existingBooking?->id)
             ->first();
 
         if ($overlappingBooking) {
@@ -164,77 +170,10 @@ class PetController extends Controller
                 ->with('error', 'This time period overlaps with an existing booking.');
         }
 
-        // Handle credit calculations
-        if (!$request->input('not_available')) {
-            $user = Auth::user();
-            $newHours = ceil($end->diffInMinutes($start) / 60);
-
-            // If pet was previously available, calculate the difference
-            if (!$pet->not_available) {
-                $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
-                $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);
-                $oldHours = ceil($oldEnd->diffInMinutes($oldStart) / 60);
-                $hourDifference = $newHours - $oldHours;
-
-                if ($hourDifference > 0) {
-                    // Extending availability - need more credits
-                    if (!$user->hasEnoughCredits($hourDifference)) {
-                        return redirect()->back()
-                            ->with('error', "You need {$hourDifference} additional credits to extend availability for {$pet->name}. You currently have {$user->credits} credits.");
-                    }
-                    $user->deductCredits($hourDifference, "Extended availability for {$pet->name} by {$hourDifference} hours");
-                    $message = "Successfully extended availability and deducted {$hourDifference} credits.";
-                } elseif ($hourDifference < 0) {
-                    // Reducing availability - refund credits
-                    $refundAmount = abs($hourDifference);
-                    $user->refundCredits($refundAmount, "Reduced availability for {$pet->name} by {$refundAmount} hours");
-                    $message = "Successfully reduced availability and refunded {$refundAmount} credits.";
-                } else {
-                    $message = "Availability period updated with no change in credits.";
-                }
-            } else {
-                // Pet was not available before - charge full duration
-                if (!$user->hasEnoughCredits($newHours)) {
-                    return redirect()->back()
-                        ->with('error', "You need {$newHours} credits to make {$pet->name} available for this duration. You currently have {$user->credits} credits.");
-                }
-                $user->deductCredits($newHours, "New availability period for {$pet->name} ({$newHours} hours)");
-                $message = "Successfully made {$pet->name} available and deducted {$newHours} credits.";
-            }
-        } else {
-            // If pet is being marked as not available and was previously available
-            if (!$pet->not_available) {
-                $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
-                $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);
-                $oldHours = ceil($oldEnd->diffInMinutes($oldStart) / 60);
-                
-                // Refund credits
-                $user = Auth::user();
-                $user->refundCredits($oldHours, "Marked {$pet->name} as not available, refunding {$oldHours} hours of availability");
-                $message = "Successfully marked {$pet->name} as not available and refunded {$oldHours} credits.";
-            } else {
-                $message = "Pet status updated.";
-            }
-        }
-
-        // Update pet information
-        $pet->update([
-            'name' => $request->input('name'),
-            'type' => $request->input('type'),
-            'age' => $request->input('age'),
-            'gender' => $request->input('gender'),
-            'not_available' => $request->input('not_available'),
-            'from' => $request->input('from'),
-            'from_time' => $request->input('from_time'),
-            'to' => $request->input('to'),
-            'to_time' => $request->input('to_time')
-        ]);
-
-        // Handle media updates more efficiently
-        $this->handleMediaUpdates($pet, $request);
+        $pet->update($request->all());
 
         return redirect()->route('frontend.pets.index')
-            ->with('message', $message ?? trans('global.pet_updated'));
+            ->with('success', 'Pet updated successfully.');
     }
 
     /**

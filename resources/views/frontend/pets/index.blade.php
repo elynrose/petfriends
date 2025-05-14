@@ -49,6 +49,10 @@
                                     
                                 @foreach($pet->photo as $media)
                                     <img src="{{ $media->getUrl() }}" class="img-fluid" alt="{{ $pet->name }}">
+                                    <!--show pet owner photo in a small circle at the bottom right corner-->
+                                    @if($pet->user->photo)
+                                        <img src="{{ $pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: 10px; right: 10px;">
+                                    @endif
                                 @endforeach
                             </div>
                             <div class="card-body">

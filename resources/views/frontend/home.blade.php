@@ -74,9 +74,12 @@
                     @foreach($pets as $pet)
                         <div class="col-md-4 mb-4">
                             <div class="card h-100">
-                                <div class="card-img-top">
+                                <div class="card-img-top" style="position: relative;">
                                     @foreach($pet->photo as $media)
                                         <img src="{{ $media->getUrl() }}" class="img-fluid" alt="{{ $pet->name }}">
+                                        @if($pet->user->photo)
+                                        <img src="{{ $pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: 10px; right: 10px;">
+                                    @endif
                                     @endforeach
                                 </div>
                                 <div class="card-body">

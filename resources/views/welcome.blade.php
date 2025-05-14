@@ -8,9 +8,9 @@
             <div class="col-lg-6">
                 <h1 class="display-4 font-weight-bold mb-4">Find Your Pet's Perfect Companion</h1>
                 <p class="lead mb-4">Connect with trusted pet sitters in your area. Safe, reliable, and loving care for your furry friends.</p>
-                @if (Route::has('register'))
+                        @if (Route::has('register'))
                     <a href="{{ route('register') }}" class="btn btn-light btn-custom">Get Started</a>
-                @endif
+                        @endif
             </div>
             <div class="col-lg-6">
                 <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
@@ -53,7 +53,7 @@
                 </div>
             </div>
         </div>
-    </div>
+                                </div>
 </section>
 
 <!-- Stats Section -->
@@ -64,22 +64,22 @@
                 <div class="stat-card">
                     <div class="stat-number"><h1 class="text-center text-white">1000+</h1></div>
                     <p class="text-center text-white">Happy Pets</p>
-                </div>
-            </div>
+                            </div>
+                                </div>
             <div class="col-md-4">
                 <div class="stat-card">
                     <div class="stat-number"><h1 class="text-center text-white">500+</h1></div>
                     <p class="text-center text-white">Trusted Sitters</p>
-                </div>
-            </div>
+                            </div>
+                                </div>
             <div class="col-md-4">
                 <div class="stat-card">
                     <div class="stat-number"><h1 class="text-center text-white">98%</h1>   </div>
                     <p class="text-center text-white">Satisfaction Rate</p>
-                </div>
-            </div>
-        </div>
-    </div>
+                            </div>
+                                </div>
+                            </div>
+                        </div>
 </section>
 
 <!-- CTA Section -->
@@ -108,7 +108,7 @@
                         <p class="testimonial-author text-muted">- Sarah M.</p>
                     </div>
                 </div>
-            </div>
+                        </div>
             <div class="col-md-4 mb-4">
                 <div class="testimonial-card">
                     <div class="testimonial-image">

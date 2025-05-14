@@ -73,10 +73,14 @@
                                     <div class="row no-gutters">
                                         <div class="col-md-3">
                                             @if($booking->pet && $booking->pet->photo && $booking->pet->photo->isNotEmpty())
-                                                <img src="{{ $booking->pet->photo->first()->getUrl() }}" 
+                                            <h3 class="mb-3 mt-3">
+                                                                {{ $booking->pet->name ?? 'Unnamed Pet' }}
+                                                        </h3>
+                                                        <a href="{{ route('frontend.pets.show', $booking->pet->id) }}" class="text-decoration-none">
+                                                        <img src="{{ $booking->pet->photo->first()->getUrl() }}" 
                                                      class="booking-image" 
                                                      alt="{{ $booking->pet->name ?? 'Pet' }}"
-                                                     onerror="this.onerror=null; this.src='{{ asset('images/pet-placeholder.jpg') }}';">
+                                                     onerror="this.onerror=null; this.src='{{ asset('images/pet-placeholder.jpg') }}';"></a>
                                             @else
                                                 <div class="booking-image-placeholder">
                                                     <i class="fas fa-paw fa-3x text-muted"></i>
@@ -87,19 +91,8 @@
                                             <div class="booking-content p-3">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
-                                                        <h5 class="mb-2">
-                                                            <a href="{{ route('frontend.pets.show', $booking->pet->id) }}" class="text-decoration-none">
-                                                                {{ $booking->pet->name ?? 'Unnamed Pet' }}
-                                                            </a>
-                                                        </h5>
-                                                        <span class="badge badge-{{ $booking->status === 'pending' ? 'warning' : 
-                                                            ($booking->status === 'approved' ? 'success' : 
-                                                            ($booking->status === 'rejected' ? 'danger' : 
-                                                            ($booking->status === 'completed' ? 'info' : 
-                                                            ($booking->status === 'new' ? 'success' : 'secondary')
-                                                            ))) }}">
-                                                            {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
-                                                        </span>
+                                                       
+                                                    
                                                     </div>
                                                     <div class="btn-group">
                                                         @if($booking->status === 'pending')
@@ -140,7 +133,7 @@
 
                                                 <div class="booking-details mt-3">
                                                     <div class="row">
-                                                        <div class="col-md-6">
+                                                        <div class="col-md-6 col-sm-6">
                                                             <h6 class="text-muted mb-3">Booking Information</h6>
                                                             <div class="small text-muted mb-2">
                                                                 <i class="fas fa-user"></i> Booked by: {{ $booking->user->name ?? 'Unknown' }}
@@ -158,8 +151,17 @@
                                                                     <i class="fas fa-calendar"></i> To: {{ \Carbon\Carbon::parse($booking->to)->format('M d, Y') }} {{ $booking->to_time ? \Carbon\Carbon::parse($booking->to_time)->format('H:i') : '' }}
                                                                 </div>
                                                             @endif
+
+                                                           <p class="mt-3"> <span class="badge badge-{{ $booking->status === 'pending' ? 'warning' : 
+                                                            ($booking->status === 'approved' ? 'success' : 
+                                                            ($booking->status === 'rejected' ? 'danger' : 
+                                                            ($booking->status === 'completed' ? 'info' : 
+                                                            ($booking->status === 'new' ? 'success' : 'secondary')
+                                                            ))) }}">
+                                                            {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
+                                                        </span></p>
                                                         </div>
-                                                        <div class="col-md-6">
+                                                        <div class="col-md-6 col-sm-6">
                                                             <h6 class="text-muted mb-3">Credits & Duration</h6>
                                                             @if($booking->from && $booking->to)
                                                                 <div class="small text-muted mb-2">
@@ -181,7 +183,7 @@
                                                             @endif
                                                             @if($booking->status === 'completed')
                                                                 @if($booking->review)
-                                                                    <div class="alert alert-info mb-0 mt-3">
+                                                                    <div class="alert alert-info mb-0 mt-3 shadow-sm">
                                                                         <strong>Your Review:</strong>
                                                                         <div class="stars">
                                                                             @for($i = 1; $i <= 5; $i++)
@@ -223,12 +225,10 @@
     .booking-item {
         background: #fff;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         transition: transform 0.2s, box-shadow 0.2s;
     }
     .booking-item:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     .booking-image {
         width: 100%;

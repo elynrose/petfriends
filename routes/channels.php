@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+Broadcast::channel('booking.{bookingId}', function ($user, $bookingId) {
+    $booking = \App\Models\Booking::find($bookingId);
+    return $booking && ($booking->user_id === $user->id || $booking->pet->user_id === $user->id);
+});

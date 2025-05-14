@@ -27,6 +27,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('bookings:send-sms-reminders')
                 ->everyMinute()
                 ->appendOutputTo(storage_path('logs/booking-sms-reminders.log'));
+
+        // Send review reminders daily at 9 AM
+        $schedule->command('reviews:send-reminders')
+                ->dailyAt('09:00')
+                ->appendOutputTo(storage_path('logs/review-reminders.log'));
     }
 
     /**

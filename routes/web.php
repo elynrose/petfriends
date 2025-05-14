@@ -179,3 +179,10 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function 
         Route::get('two-factor/resend', 'TwoFactorController@resend')->name('twoFactor.resend');
     }
 });
+
+// Chat routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/frontend/bookings/{booking}/messages', [App\Http\Controllers\Frontend\ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::post('/frontend/bookings/{booking}/messages', [App\Http\Controllers\Frontend\ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::post('/frontend/bookings/{booking}/messages/read', [App\Http\Controllers\Frontend\ChatController::class, 'markAsRead'])->name('chat.read');
+});

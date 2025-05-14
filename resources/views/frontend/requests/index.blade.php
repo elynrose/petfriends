@@ -70,10 +70,15 @@
                                     <div class="row no-gutters">
                                         <div class="col-md-3">
                                             @if($booking->pet && $booking->pet->photo && $booking->pet->photo->isNotEmpty())
+                                            <div style="position: relative;">
                                                 <img src="{{ $booking->pet->photo->first()->getUrl() }}" 
                                                      class="booking-image" 
                                                      alt="{{ $booking->pet->name ?? 'Pet' }}"
                                                      onerror="this.onerror=null; this.src='{{ asset('images/pet-placeholder.jpg') }}';">
+                                                     @if($booking->pet->user->photo)
+                                                          <img src="{{ $booking->pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: 10px; right: 10px;">
+                                                     @endif
+                                                    </div>
                                             @else
                                                 <div class="booking-image-placeholder">
                                                     <i class="fas fa-paw fa-3x text-muted"></i>
@@ -133,6 +138,9 @@
                                                                     <i class="fas fa-check"></i> Complete
                                                                 </button>
                                                             </form>
+                                                            <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
+                                                                <i class="fas fa-comments"></i> Chat
+                                                            </a>
                                                         @endif
                                                     </div>
                                                 </div>
