@@ -43,7 +43,7 @@
         flex: 1;
         overflow-y: auto;
         padding: 1.5rem;
-        padding-bottom: 5rem; /* Add padding to prevent messages from being hidden behind the input box */
+        padding-bottom: 5rem;
     }
     .message {
         margin-bottom: 1.5rem;
@@ -110,11 +110,39 @@
         background-color: #1a73e8;
         color: white;
         border-top-right-radius: 0.25rem;
+        position: relative;
+    }
+    .message.sent .message-content::after {
+        content: '';
+        position: absolute;
+        right: -8px;
+        top: 0;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-left-color: #1a73e8;
+        border-right: 0;
+        border-top: 0;
+        margin-top: 0;
     }
     .message.received .message-content {
         background-color: #34a853;
         color: white;
         border-top-left-radius: 0.25rem;
+        position: relative;
+    }
+    .message.received .message-content::after {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-right-color: #34a853;
+        border-left: 0;
+        border-top: 0;
+        margin-top: 0;
     }
     .message-time {
         font-size: 0.7rem;
@@ -161,14 +189,6 @@
     .chat-form .btn i {
         font-size: 1rem;
     }
-
-    .sent {
-    border: solid 1px #cccccc!important;
-    margin-bottom: 20px!important;
-    padding: 20px!important;
-    background-color: #fbfbfb!important;
-    border-radius: 12px!important;
-}
 </style>
 @endpush
 
