@@ -7,7 +7,23 @@
     </div>
 
     <div class="card-body">
-        <form method="POST" action="{{ route("admin.pets.update", [$pet->id]) }}" enctype="multipart/form-data">
+        @if(session('message'))
+            <div class="alert alert-success">
+                {{ session('message') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route("admin.pets.update", [$pet->id]) }}" enctype="multipart/form-data" id="pet-form">
             @method('PUT')
             @csrf
             <div class="form-group">
@@ -143,12 +159,69 @@
     </div>
 </div>
 
-
-
 @endsection
 
 @section('scripts')
 <script>
+    $(document).ready(function() {
+        // Initialize date pickers
+        $('.date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+
+        // Initialize time pickers
+        $('.timepicker').timepicker({
+            format: 'HH:mm',
+            showMeridian: false,
+            minuteStep: 15
+        });
+
+        // Form validation
+        $('#pet-form').on('submit', function(e) {
+            var notAvailable = $('#not_available').is(':checked');
+            
+            if (!notAvailable) {
+                var from = $('#from').val();
+                var fromTime = $('#from_time').val();
+                var to = $('#to').val();
+                var toTime = $('#to_time').val();
+
+                if (!from || !fromTime || !to || !toTime) {
+                    e.preventDefault();
+                    alert('Please fill in all availability fields when the pet is available.');
+                    return false;
+                }
+
+                // Validate time range
+                var start = moment(from + ' ' + fromTime);
+                var end = moment(to + ' ' + toTime);
+
+                if (end.isBefore(start)) {
+                    e.preventDefault();
+                    alert('End date/time must be after start date/time.');
+                    return false;
+                }
+
+                // Validate business hours (6 AM to 10 PM)
+                var startHour = start.hour();
+                var endHour = end.hour();
+
+                if (startHour < 6 || startHour >= 22 || endHour < 6 || endHour >= 22) {
+                    e.preventDefault();
+                    alert('Bookings are only allowed between 6 AM and 10 PM.');
+                    return false;
+                }
+            }
+        });
+
+        // Toggle availability fields
+        $('#not_available').on('change', function() {
+            var isChecked = $(this).is(':checked');
+            $('#from, #from_time, #to, #to_time').prop('disabled', isChecked);
+        }).trigger('change');
+    });
+
     var uploadedPhotoMap = {}
 Dropzone.options.photoDropzone = {
     url: '{{ route('admin.pets.storeMedia') }}',

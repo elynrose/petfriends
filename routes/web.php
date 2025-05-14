@@ -108,10 +108,10 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::resource('users', 'UsersController');
 
     // Pets
-    Route::delete('pets/destroy', 'PetController@massDestroy')->name('pets.massDestroy');
-    Route::post('pets/media', 'PetController@storeMedia')->name('pets.storeMedia');
-    Route::post('pets/ckmedia', 'PetController@storeCKEditorImages')->name('pets.storeCKEditorImages');
-    Route::resource('pets', 'PetController');
+    Route::delete('pets/destroy', 'PetsController@massDestroy')->name('pets.massDestroy');
+    Route::post('pets/media', 'PetsController@storeMedia')->name('pets.storeMedia');
+    Route::post('pets/ckmedia', 'PetsController@storeCKEditorImages')->name('pets.storeCKEditorImages');
+    Route::resource('pets', 'PetsController');
 
     // Requests routes
     Route::get('requests', 'RequestController@index')->name('requests.index');

@@ -58,11 +58,11 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ $pet->name }}  
                                   @if($pet->user_id === Auth::user()->id) 
-                                    @can('pet_edit')
-                                            <a class="btn btn-xs btn-default text-dark" href="{{ route('frontend.pets.edit', $pet->id) }}" ><i class="fa fa-pencil"></i></a>
-                                        @endcan
-                                    @endif
-                                    </h5>
+                                    <a class="btn btn-xs btn-primary" href="{{ route('frontend.pets.edit', $pet->id) }}" title="Edit Pet">
+                                        <i class="fa fa-pencil"></i> Edit
+                                    </a>
+                                  @endif
+                                </h5>
                                 <p class="card-text">
                                     <strong>{{ trans('cruds.pet.fields.type') }}:</strong> {{ App\Models\Pet::TYPE_SELECT[$pet->type] ?? '' }}<br>
                                     <strong>{{ trans('cruds.pet.fields.age') }}:</strong> {{ $pet->age ?? '' }}<br>
@@ -77,9 +77,11 @@
                                     @endif
                                 </p>
                                 <div class="btn-group">
-
-
-
+                                    @if($pet->user_id === Auth::user()->id)
+                                        <a href="{{ route('frontend.pets.edit', $pet->id) }}" class="btn btn-primary">
+                                            <i class="fa fa-pencil"></i> Edit Pet
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         </div>

@@ -12,6 +12,8 @@ use Gate;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
+use App\Services\PetAvailabilityService;
+use Illuminate\Support\Facades\DB;
 
 class PetsController extends Controller
 {
@@ -57,23 +59,113 @@ class PetsController extends Controller
 
     public function update(UpdatePetRequest $request, Pet $pet)
     {
-        $pet->update($request->all());
+        \Log::info('UPDATE METHOD STARTED', [
+            'pet_id' => $pet->id,
+            'request_data' => $request->all(),
+            'user_id' => auth()->id(),
+            'user_credits' => auth()->user()->credits
+        ]);
 
-        if (count($pet->photo) > 0) {
-            foreach ($pet->photo as $media) {
-                if (! in_array($media->file_name, $request->input('photo', []))) {
-                    $media->delete();
+        try {
+            DB::beginTransaction();
+
+            $oldHours = null;
+            if (!$pet->not_available) {
+                $start = \Carbon\Carbon::parse($pet->from . ' ' . $pet->from_time);
+                $end = \Carbon\Carbon::parse($pet->to . ' ' . $pet->to_time);
+                $oldHours = ceil($end->diffInMinutes($start) / 60);
+                
+                \Log::info('OLD HOURS CALCULATED', [
+                    'old_hours' => $oldHours,
+                    'from' => $pet->from,
+                    'from_time' => $pet->from_time,
+                    'to' => $pet->to,
+                    'to_time' => $pet->to_time
+                ]);
+            }
+
+            // Handle credit changes if availability is being modified
+            if (!$request->input('not_available')) {
+                \Log::info('PET IS BEING MADE AVAILABLE');
+                
+                $start = \Carbon\Carbon::parse($request->input('from') . ' ' . $request->input('from_time'));
+                $end = \Carbon\Carbon::parse($request->input('to') . ' ' . $request->input('to_time'));
+                $newHours = ceil($end->diffInMinutes($start) / 60);
+
+                \Log::info('NEW HOURS CALCULATED', [
+                    'new_hours' => $newHours,
+                    'from' => $request->input('from'),
+                    'from_time' => $request->input('from_time'),
+                    'to' => $request->input('to'),
+                    'to_time' => $request->input('to_time')
+                ]);
+
+                $availabilityService = new PetAvailabilityService();
+                $result = $availabilityService->handleCreditChanges($pet, auth()->user(), $newHours, $oldHours);
+
+                \Log::info('CREDIT CHANGES RESULT', [
+                    'result' => $result,
+                    'user_credits_after' => auth()->user()->credits
+                ]);
+
+                if (!$result['success']) {
+                    throw new \Exception($result['message']);
+                }
+            } elseif (!$pet->not_available) {
+                \Log::info('PET IS BEING MARKED AS NOT AVAILABLE');
+                
+                $availabilityService = new PetAvailabilityService();
+                $result = $availabilityService->handleNotAvailable($pet, auth()->user());
+
+                \Log::info('NOT AVAILABLE RESULT', [
+                    'result' => $result,
+                    'user_credits_after' => auth()->user()->credits
+                ]);
+
+                if (!$result['success']) {
+                    throw new \Exception($result['message']);
                 }
             }
-        }
-        $media = $pet->photo->pluck('file_name')->toArray();
-        foreach ($request->input('photo', []) as $file) {
-            if (count($media) === 0 || ! in_array($file, $media)) {
-                $pet->addMedia(storage_path('tmp/uploads/' . basename($file)))->toMediaCollection('photo');
-            }
-        }
 
-        return redirect()->route('admin.pets.index');
+            // Now update the pet with new values
+            $pet->update($request->all());
+
+            if (count($pet->photo) > 0) {
+                foreach ($pet->photo as $media) {
+                    if (! in_array($media->file_name, $request->input('photo', []))) {
+                        $media->delete();
+                    }
+                }
+            }
+            $media = $pet->photo->pluck('file_name')->toArray();
+            foreach ($request->input('photo', []) as $file) {
+                if (count($media) === 0 || ! in_array($file, $media)) {
+                    $pet->addMedia(storage_path('tmp/uploads/' . basename($file)))->toMediaCollection('photo');
+                }
+            }
+
+            DB::commit();
+
+            \Log::info('UPDATE COMPLETED SUCCESSFULLY', [
+                'pet_id' => $pet->id,
+                'user_id' => auth()->id(),
+                'final_credits' => auth()->user()->credits
+            ]);
+
+            return redirect()->route('admin.pets.index')
+                ->with('message', 'Pet updated successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('UPDATE FAILED', [
+                'pet_id' => $pet->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function show(Pet $pet)

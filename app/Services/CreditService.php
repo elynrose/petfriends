@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Models\Pet;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CreditService
 {
@@ -47,10 +48,27 @@ class CreditService
      */
     public function awardCreditsForBooking(User $user, Booking $booking): bool
     {
-        $credits = $this->calculateCreditsFromBooking($booking);
-        $user->addCredits($credits, "Credits earned from completed booking for {$booking->pet->name}", $booking);
-        
-        return true;
+        try {
+            DB::beginTransaction();
+            
+            $credits = $this->calculateCreditsFromBooking($booking);
+            $result = $user->addCredits(
+                $credits,
+                "Credits earned from completed booking #{$booking->id} for {$booking->pet->name}",
+                $booking
+            );
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error awarding credits for booking', [
+                'booking_id' => $booking->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -75,8 +93,27 @@ class CreditService
      */
     public function deductCreditsForBooking(User $user, Booking $booking): bool
     {
-        $requiredCredits = $this->calculateCreditsFromBooking($booking);
-        return $user->deductCredits($requiredCredits);
+        try {
+            DB::beginTransaction();
+            
+            $requiredCredits = $this->calculateCreditsFromBooking($booking);
+            $result = $user->deductCredits(
+                $requiredCredits,
+                "Credits deducted for booking #{$booking->id}",
+                $booking
+            );
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error deducting credits for booking', [
+                'booking_id' => $booking->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -91,13 +128,58 @@ class CreditService
             return 0;
         }
 
-        $start = Carbon::parse($pet->from . ' ' . $pet->from_time);
-        $end = Carbon::parse($pet->to . ' ' . $pet->to_time);
-        
-        // Calculate hours, rounding up to the nearest hour
-        $hours = ceil($end->diffInMinutes($start) / 60);
-        
-        // Ensure minimum of 1 credit
-        return max(1, (int) $hours);
+        try {
+            $start = Carbon::parse($pet->from . ' ' . $pet->from_time);
+            $end = Carbon::parse($pet->to . ' ' . $pet->to_time);
+            
+            // Validate time range
+            if ($end->lte($start)) {
+                return 0;
+            }
+            
+            // Calculate hours, rounding up to the nearest hour
+            $hours = ceil($end->diffInMinutes($start) / 60);
+            
+            // Ensure minimum of 1 credit and maximum of 24 hours
+            return max(1, min(24, (int) $hours));
+        } catch (\Exception $e) {
+            \Log::error('Error calculating pet availability hours', [
+                'pet_id' => $pet->id,
+                'error' => $e->getMessage()
+            ]);
+            return 0;
+        }
+    }
+
+    /**
+     * Refund credits to a user
+     *
+     * @param User $user
+     * @param Booking $booking
+     * @return bool
+     */
+    public function refundCreditsForBooking(User $user, Booking $booking): bool
+    {
+        try {
+            DB::beginTransaction();
+            
+            $credits = $this->calculateCreditsFromBooking($booking);
+            $result = $user->refundCredits(
+                $credits,
+                "Credits refunded for cancelled booking #{$booking->id}",
+                $booking
+            );
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error refunding credits for booking', [
+                'booking_id' => $booking->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 }

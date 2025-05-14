@@ -110,6 +110,11 @@
                                     @endif
                                 </div>
                                 <div id="availabilityDates" class="form-group" style="display: none;">
+                                    @if($errors->has('availability'))
+                                        <div class="alert alert-danger">
+                                            {{ $errors->first('availability') }}
+                                        </div>
+                                    @endif
                                     <div class="row">
                                         <div class="col-md-6">
                                             <label class="required" for="from">Available From</label>
@@ -182,6 +187,13 @@
 
     // Initialize Dropzone
     $(document).ready(function() {
+        // Add form submission logging
+        $('form').on('submit', function(e) {
+            console.log('Form submitting to:', this.action);
+            console.log('Form method:', this.method);
+            console.log('Form data:', new FormData(this));
+        });
+
         var myDropzone = new Dropzone("#photo-dropzone", {
             url: '{{ route('frontend.pets.storeMedia') }}',
             maxFilesize: 5, // MB
@@ -253,19 +265,96 @@
             }
         }
 
-        // Initial state
+        // Initialize date pickers
+        $('.date').datepicker({
+            format: 'yyyy-mm-dd',
+            startDate: new Date(),
+            autoclose: true
+        });
+
+        // Set initial state
         toggleAvailabilityDates();
 
-        // Toggle on checkbox change
+        // Handle checkbox change
         $('#not_available').change(function() {
             toggleAvailabilityDates();
         });
 
-        // Initialize date picker
-        $('.date').datepicker({
-            format: 'yyyy-mm-dd',
-            autoclose: true,
-            startDate: new Date()
+        // Form validation before submit
+        $('form').submit(function(e) {
+            console.log('Form validation started');
+            console.log('not_available checked:', $('#not_available').is(':checked'));
+            
+            if (!$('#not_available').is(':checked')) {
+                var from = $('#from').val();
+                var to = $('#to').val();
+                var fromTime = $('#from_time').val();
+                var toTime = $('#to_time').val();
+
+                console.log('Availability values:', {
+                    from: from,
+                    to: to,
+                    fromTime: fromTime,
+                    toTime: toTime
+                });
+
+                if (!from || !to || !fromTime || !toTime) {
+                    console.log('Validation failed: Missing required fields');
+                    e.preventDefault();
+                    alert('Please fill in all availability dates and times when the pet is available.');
+                    return false;
+                }
+
+                var fromDate = new Date(from + ' ' + fromTime);
+                var toDate = new Date(to + ' ' + toTime);
+
+                console.log('Date objects:', {
+                    fromDate: fromDate,
+                    toDate: toDate
+                });
+
+                if (fromDate >= toDate) {
+                    console.log('Validation failed: End date before start date');
+                    e.preventDefault();
+                    alert('End date and time must be after start date and time.');
+                    return false;
+                }
+
+                if (fromDate < new Date()) {
+                    console.log('Validation failed: Start date in past');
+                    e.preventDefault();
+                    alert('Start date and time must be in the future.');
+                    return false;
+                }
+
+                // Check if duration is within limits (24 hours)
+                var durationHours = (toDate - fromDate) / (1000 * 60 * 60);
+                console.log('Duration in hours:', durationHours);
+                
+                if (durationHours > 24) {
+                    console.log('Validation failed: Duration > 24 hours');
+                    e.preventDefault();
+                    alert('Availability period cannot exceed 24 hours.');
+                    return false;
+                }
+
+                // Check if time is within business hours (9 AM to 5 PM)
+                var fromHour = fromDate.getHours();
+                var toHour = toDate.getHours();
+                console.log('Hours:', {
+                    fromHour: fromHour,
+                    toHour: toHour
+                });
+                
+                if (fromHour < 9 || toHour > 17) {
+                    console.log('Validation failed: Outside business hours');
+                    e.preventDefault();
+                    alert('Availability must be between 9 AM and 5 PM.');
+                    return false;
+                }
+            }
+            
+            console.log('Form validation passed, proceeding with submission');
         });
     });
 </script>

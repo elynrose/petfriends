@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
         Commands\SendBookingReminders::class,
         Commands\SendBookingSMSReminders::class,
         Commands\CompletePastBookingsCommand::class,
+        Commands\TestPetAvailability::class,
     ];
 
     /**

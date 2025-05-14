@@ -115,13 +115,22 @@ class PetAvailabilityService
                 'old_hours' => $oldHours,
                 'new_hours' => $newHours,
                 'credits_changed' => $result['credits_changed'],
-                'user_id' => $user->id
+                'user_id' => $user->id,
+                'user_credits' => $user->credits
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             $result['success'] = false;
             $result['message'] = $e->getMessage();
+            
+            // Log the error
+            Log::channel('pet_availability')->error('Pet availability update failed', [
+                'pet_id' => $pet->id,
+                'pet_name' => $pet->name,
+                'error' => $e->getMessage(),
+                'user_id' => $user->id
+            ]);
         }
 
         return $result;
@@ -135,38 +144,49 @@ class PetAvailabilityService
         $result = [
             'success' => true,
             'message' => '',
-            'credits_refunded' => 0
+            'credits_changed' => 0
         ];
 
         try {
             DB::beginTransaction();
 
-            if (!$pet->not_available) {
-                $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
-                $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);
-                $oldHours = $this->calculateHours($oldStart, $oldEnd);
+            // Calculate hours to refund
+            $start = Carbon::parse($pet->from . ' ' . $pet->from_time);
+            $end = Carbon::parse($pet->to . ' ' . $pet->to_time);
+            $hours = ceil($end->diffInMinutes($start) / 60);
 
-                $user->refundCredits($oldHours, "Marked {$pet->name} as not available, refunding {$oldHours} hours of availability");
-                $result['message'] = "Successfully marked {$pet->name} as not available and refunded {$oldHours} credits.";
-                $result['credits_refunded'] = $oldHours;
-
-                // Log the availability change
-                Log::channel('pet_availability')->info('Pet marked as not available', [
-                    'pet_id' => $pet->id,
-                    'pet_name' => $pet->name,
-                    'hours_refunded' => $oldHours,
-                    'user_id' => $user->id
-                ]);
+            if ($hours > 0) {
+                $user->refundCredits($hours, "Pet {$pet->name} marked as not available");
+                $result['credits_changed'] = $hours;
+                $result['message'] = "Successfully refunded {$hours} credits.";
             } else {
-                $result['message'] = "Pet status updated.";
+                $result['message'] = "No credits to refund.";
             }
 
             DB::commit();
+
+            // Log the refund
+            Log::channel('pet_availability')->info('Pet marked as not available, credits refunded', [
+                'pet_id' => $pet->id,
+                'pet_name' => $pet->name,
+                'credits_refunded' => $result['credits_changed'],
+                'user_id' => $user->id,
+                'user_credits' => $user->credits
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             $result['success'] = false;
             $result['message'] = $e->getMessage();
+            $result['credits_changed'] = 0;
+
+            // Log the error
+            Log::channel('pet_availability')->error('Failed to refund credits when marking pet as not available', [
+                'pet_id' => $pet->id,
+                'pet_name' => $pet->name,
+                'error' => $e->getMessage(),
+                'user_id' => $user->id
+            ]);
         }
 
         return $result;

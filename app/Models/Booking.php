@@ -12,6 +12,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Notifications\Notifiable;
 use App\Services\CreditService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Booking extends Model implements HasMedia
 {
@@ -114,42 +115,103 @@ class Booking extends Model implements HasMedia
     public function complete()
     {
         if ($this->status !== 'completed') {
-            // Load necessary relationships
-            $this->load(['pet.owner', 'user']);
-            
-            if (!$this->pet || !$this->pet->owner) {
-                throw new \Exception('Pet or pet owner not found for this booking.');
+            try {
+                DB::beginTransaction();
+
+                // Load necessary relationships
+                $this->load(['pet.user', 'user']);
+                
+                if (!$this->pet || !$this->pet->user) {
+                    throw new \Exception('Pet or pet owner not found for this booking.');
+                }
+
+                if (!$this->user) {
+                    throw new \Exception('Caregiver not found for this booking.');
+                }
+
+                // Get credit service instance
+                $creditService = app(CreditService::class);
+                
+                // Calculate hours using the service
+                $hours = $creditService->calculateBookingHours($this);
+
+                // Deduct credits from pet owner
+                if (!$creditService->deductCreditsForBooking($this->pet->user, $this)) {
+                    throw new \Exception('Failed to deduct credits from pet owner.');
+                }
+
+                // Award credits to caregiver
+                if (!$creditService->awardCreditsForBooking($this->user, $this)) {
+                    throw new \Exception('Failed to award credits to caregiver.');
+                }
+
+                // Update booking status
+                $this->status = 'completed';
+                $this->save();
+
+                // Set pet as unavailable and clear booking dates
+                $this->pet->not_available = true;
+                $this->pet->from = null;
+                $this->pet->from_time = null;
+                $this->pet->to = null;
+                $this->pet->to_time = null;
+                $this->pet->save();
+
+                DB::commit();
+                return true;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Error completing booking', [
+                    'booking_id' => $this->id,
+                    'error' => $e->getMessage()
+                ]);
+                return false;
             }
+        }
 
-            if (!$this->user) {
-                throw new \Exception('Caregiver not found for this booking.');
+        return false;
+    }
+
+    /**
+     * Cancel the booking and refund credits
+     *
+     * @return bool
+     */
+    public function cancel()
+    {
+        if ($this->status === 'pending') {
+            try {
+                DB::beginTransaction();
+
+                // Load necessary relationships
+                $this->load(['pet.user', 'user']);
+                
+                if (!$this->pet || !$this->pet->user) {
+                    throw new \Exception('Pet or pet owner not found for this booking.');
+                }
+
+                // Get credit service instance
+                $creditService = app(CreditService::class);
+                
+                // Refund credits to pet owner
+                if (!$creditService->refundCreditsForBooking($this->pet->user, $this)) {
+                    throw new \Exception('Failed to refund credits to pet owner.');
+                }
+
+                // Update booking status
+                $this->status = 'cancelled';
+                $this->save();
+
+                DB::commit();
+                return true;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Error cancelling booking', [
+                    'booking_id' => $this->id,
+                    'error' => $e->getMessage()
+                ]);
+                return false;
             }
-
-            $this->status = 'completed';
-            $this->save();
-
-            // Get credit service instance
-            $creditService = app(CreditService::class);
-            
-            // Calculate hours using the service
-            $hours = $creditService->calculateBookingHours($this);
-
-            // Transfer credits from pet owner to caregiver
-            // Deduct credits from pet owner
-            $this->pet->owner->deductCredits(
-                $hours,
-                "Credits deducted for {$hours} hours of pet care by {$this->user->name}",
-                $this
-            );
-
-            // Award credits to caregiver
-            $this->user->addCredits(
-                $hours,
-                "Credits earned for {$hours} hours of pet care for {$this->pet->name}",
-                $this
-            );
-
-            return true;
         }
 
         return false;
