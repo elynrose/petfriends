@@ -128,6 +128,9 @@
                                                                 <i class="fas fa-star"></i> Review
                                                             </a>
                                                         @endif
+                                                        <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-comments"></i> Chat
+                                                        </a>
                                                     </div>
                                                 </div>
 

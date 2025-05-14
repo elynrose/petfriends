@@ -127,11 +127,12 @@
                                                             </form>
                                                         @endif
                                                         @if($booking->status === 'accepted')
+                                                      
                                                             <form action="{{ route('frontend.bookings.complete', $booking->id) }}" 
                                                                   method="POST" 
                                                                   class="d-inline">
                                                                 @csrf
-                                                                @method('PUT')
+                                                                @method('PUT')  <div class="btn-group">
                                                                 <button type="submit" 
                                                                         class="btn btn-outline-success btn-sm"
                                                                         onclick="return confirm('{{ trans('global.completeBookingConfirmation') }}')">
@@ -141,6 +142,7 @@
                                                             <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
                                                                 <i class="fas fa-comments"></i> Chat
                                                             </a>
+                                                        </div>  
                                                         @endif
                                                     </div>
                                                 </div>

@@ -29,7 +29,7 @@ class BookingController extends Controller
 
         $bookings = Booking::with(['pet', 'user', 'media'])
         ->where('user_id', auth()->id())
-        ->orderBy('status', 'desc')
+        ->orderBy('status', 'asc')
         ->get();
 
         //Pending bookings count
