@@ -11,16 +11,22 @@
                     </a>
                 </div>
                 <div class="card-body p-0">
-                    <div class="chat-container" style="height: 600px; overflow-y: auto;" data-booking-id="{{ $booking->id }}">
-                        <div class="chat-messages p-3" style="height: 450px; overflow-y: auto;">
-                            <!-- Messages will be loaded here -->
+                    <div class="chat-container" data-booking-id="{{ $booking->id }}">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="chat-form p-3 border-top">
-                            <form id="chat-form" class="d-flex">
-                                <input type="text" class="form-control me-2" id="message" placeholder="Type your message..." required>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
+                        <div class="chat-form">
+                            <form id="chat-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="message-input" placeholder="Type your message..." required>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -33,258 +39,211 @@
 @push('styles')
 <style>
     .chat-container {
-        display: flex;
-        flex-direction: column;
-        background-color: #f0f2f5;
-        height: 600px;
-        position: relative;
-    }
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.5rem;
-        padding-bottom: 5rem;
-    }
-    .message {
-        margin-bottom: 1.5rem;
-        max-width: 70%;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        position: relative;
-    }
-    .message.sent {
-        margin-left: auto;
-        flex-direction: row-reverse;
-    }
-    .message.received {
-        margin-right: auto;
-    }
-    .message-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         overflow: hidden;
-        flex-shrink: 0;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .message-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+
+    .chat-messages {
+        height: 500px;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
     }
-    .message-avatar svg {
-        width: 100%;
-        height: 100%;
-        fill: #6c757d;
-        background-color: #e9ecef;
-    }
-    .message-content-wrapper {
+
+    .message {
+        margin-bottom: 20px;
         display: flex;
         flex-direction: column;
-        max-width: calc(100% - 60px);
     }
-    .message-sender {
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        padding: 0 0.5rem;
+
+    .message.sent {
+        align-items: flex-end;
     }
-    .message.sent .message-sender {
-        text-align: right;
-        color: #1a73e8;
+
+    .message.received {
+        align-items: flex-start;
     }
-    .message.received .message-sender {
-        color: #34a853;
-    }
+
     .message-content {
-        padding: 0.75rem 1rem;
-        border-radius: 1.25rem;
-        display: inline-block;
+        max-width: 70%;
+        background: #fff;
+        padding: 15px;
+        border-radius: 10px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        position: relative;
-        word-wrap: break-word;
     }
+
     .message.sent .message-content {
-        background-color: #1a73e8;
-        color: white;
-        border-top-right-radius: 0.25rem;
-        position: relative;
+        background: #007bff;
+        color: #fff;
     }
-    .message.sent .message-content::after {
-        content: '';
-        position: absolute;
-        right: -8px;
-        top: 0;
-        width: 0;
-        height: 0;
-        border: 8px solid transparent;
-        border-left-color: #1a73e8;
-        border-right: 0;
-        border-top: 0;
-        margin-top: 0;
-    }
-    .message.received .message-content {
-        background-color: #34a853;
-        color: white;
-        border-top-left-radius: 0.25rem;
-        position: relative;
-    }
-    .message.received .message-content::after {
-        content: '';
-        position: absolute;
-        left: -8px;
-        top: 0;
-        width: 0;
-        height: 0;
-        border: 8px solid transparent;
-        border-right-color: #34a853;
-        border-left: 0;
-        border-top: 0;
-        margin-top: 0;
-    }
-    .message-time {
-        font-size: 0.7rem;
-        color: #6c757d;
-        margin-top: 0.25rem;
-        padding: 0 0.5rem;
-    }
-    .message.sent .message-time {
-        text-align: right;
-    }
-    .chat-form {
-        background-color: #fff;
-        border-top: 1px solid #dee2e6;
-        padding: 1rem;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-    }
-    .chat-form .form-control {
-        border-radius: 1.5rem;
-        padding: 0.75rem 1.25rem;
-        border: 1px solid #dee2e6;
-    }
-    .chat-form .form-control:focus {
-        box-shadow: none;
-        border-color: #1a73e8;
-    }
-    .chat-form .btn {
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        padding: 0;
+
+    .message-header {
         display: flex;
         align-items: center;
-        justify-content: center;
-        background-color: #1a73e8;
+        margin-bottom: 8px;
+    }
+
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+
+    .user-name {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .message-time {
+        font-size: 0.8em;
+        color: #666;
+    }
+
+    .message.sent .message-time {
+        color: #fff;
+    }
+
+    .message-text {
+        word-wrap: break-word;
+    }
+
+    .chat-input {
+        padding: 20px;
+        background: #fff;
+        border-top: 1px solid #eee;
+    }
+
+    .chat-form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .message-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        resize: none;
+    }
+
+    .send-button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: #fff;
         border: none;
+        border-radius: 5px;
+        cursor: pointer;
     }
-    .chat-form .btn:hover {
-        background-color: #1557b0;
+
+    .send-button:hover {
+        background: #0056b3;
     }
-    .chat-form .btn i {
-        font-size: 1rem;
+
+    .send-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+    .error-message {
+        text-align: center;
+        padding: 20px;
+        color: #dc3545;
+        background: #f8d7da;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+
+    .no-messages {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+        font-style: italic;
     }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-console.log('Chat script loaded');
-
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded');
-    
     const chatContainer = document.querySelector('.chat-container');
-    const chatMessages = chatContainer.querySelector('.chat-messages');
+    const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
-    const messageInput = document.getElementById('message');
+    const messageInput = document.getElementById('message-input');
     const bookingId = chatContainer.dataset.bookingId;
-
-    console.log('Chat elements found:', {
-        chatContainer: !!chatContainer,
-        chatMessages: !!chatMessages,
-        chatForm: !!chatForm,
-        messageInput: !!messageInput,
-        bookingId: bookingId
-    });
+    let isLoading = false;
 
     // Load messages
-    function loadMessages() {
-        console.log('Loading messages for booking:', bookingId);
-        fetch(`/frontend/bookings/${bookingId}/messages`)
-            .then(response => {
-                console.log('Load messages response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Loaded messages:', data);
-                chatMessages.innerHTML = '';
-                if (data.length === 0) {
-                    chatMessages.innerHTML = '<div class="text-center text-muted py-4">No messages yet. Start the conversation!</div>';
-                } else {
-                    data.forEach(message => {
-                        appendMessage(message);
-                    });
-                }
-                scrollToBottom();
-            })
-            .catch(error => {
-                console.error('Error loading messages:', error);
-                chatMessages.innerHTML = '<div class="text-center text-danger py-4">Error loading messages. Please try again.</div>';
-            });
+    async function loadMessages() {
+        if (isLoading) return;
+        isLoading = true;
+        
+        try {
+            console.log('Fetching messages for booking:', bookingId);
+            const response = await fetch(`/frontend/bookings/${bookingId}/messages`);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const messages = await response.json();
+            console.log('Received messages:', messages);
+            
+            // Clear loading spinner
+            chatMessages.innerHTML = '';
+            
+            if (!Array.isArray(messages)) {
+                throw new Error('Invalid response format: expected array of messages');
+            }
+            
+            if (messages.length === 0) {
+                chatMessages.innerHTML = '<div class="no-messages">No messages yet. Start the conversation!</div>';
+            } else {
+                messages.forEach(appendMessage);
+            }
+            scrollToBottom();
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            chatMessages.innerHTML = `
+                <div class="error-message">
+                    Error loading messages: ${error.message}<br>
+                    Please try refreshing the page.
+                </div>
+            `;
+        } finally {
+            isLoading = false;
+        }
     }
 
     // Append message to chat
     function appendMessage(message) {
-        console.log('Appending message:', message);
-        const isSent = message.from_id === {{ auth()->id() }};
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-        
-        // Format the date properly
-        let messageTime;
-        try {
-            const date = new Date(message.created_at);
-            messageTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } catch (e) {
-            console.error('Error formatting date:', e);
-            messageTime = 'Just now';
-        }
-
-        // Default avatar SVG with a different color for each user
-        const defaultAvatar = `<svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-        </svg>`;
-
-        // Handle both real-time messages and loaded messages
-        const fromName = message.from_name || (isSent ? '{{ auth()->user()->name }}' : 'Other User');
-        const fromPhoto = message.from_photo || null;
-
-        let avatarHtml;
-        if (fromPhoto) {
-            avatarHtml = `<div class="message-avatar">
-                <img src="${fromPhoto}" alt="${fromName}" onerror="this.parentElement.innerHTML = document.getElementById('default-avatar').innerHTML;">
-            </div>`;
-        } else {
-            avatarHtml = `<div class="message-avatar" id="default-avatar">
-                ${defaultAvatar}
-            </div>`;
-        }
-
-        messageDiv.innerHTML = `
-            ${avatarHtml}
-            <div class="message-content-wrapper">
-                <div class="message-sender">${fromName}</div>
-                <div class="message-content">${message.message}</div>
-                <div class="message-time">${messageTime}</div>
+        const isCurrentUser = message.from_id === {{ Auth::id() }};
+        const userPhoto = message.from_photo ? message.from_photo : '{{ asset('images/user-placeholder.svg') }}';
+        const messageHtml = `
+            <div class="message ${isCurrentUser ? 'sent' : 'received'}" data-message-id="${message.id}">
+                <div class="message-content">
+                    <div class="message-header">
+                        <img src="${userPhoto}" alt="${message.from_name}" class="user-avatar" width="50" height="50" onerror="this.onerror=null; this.src='{{ asset('images/user-placeholder.svg') }}';">
+                        <span class="user-name">${message.from_name}</span>
+                        <span class="message-time">${new Date(message.created_at).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-text">${message.message}</div>
+                </div>
             </div>
         `;
-        chatMessages.appendChild(messageDiv);
+        chatMessages.insertAdjacentHTML('beforeend', messageHtml);
     }
 
     // Scroll to bottom of chat
@@ -294,72 +253,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Send message
     if (chatForm) {
-        console.log('Adding submit event listener to chat form');
-        chatForm.addEventListener('submit', function(e) {
-            console.log('Form submitted');
+        chatForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const message = messageInput.value.trim();
-            if (!message) {
-                console.log('Empty message, not sending');
-                return;
-            }
+            if (!message) return;
 
-            console.log('Sending message:', message);
-            console.log('CSRF Token:', '{{ csrf_token() }}');
-            console.log('Booking ID:', bookingId);
+            const submitButton = chatForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            fetch(`/frontend/bookings/${bookingId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ message })
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
+            try {
+                const response = await fetch(`/frontend/bookings/${bookingId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
                 if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(text);
-                    });
+                    throw new Error(data.error || 'Failed to send message');
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Message sent successfully:', data);
-                messageInput.value = '';
-                scrollToBottom();
-            })
-            .catch(error => {
+
+                if (data.success) {
+                    messageInput.value = '';
+                    scrollToBottom();
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } catch (error) {
                 console.error('Error sending message:', error);
-                alert('Failed to send message. Please try again.');
-            });
+                alert('Failed to send message: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
         });
-    } else {
-        console.error('Chat form not found!');
     }
 
     // Listen for new messages
     Echo.private(`booking.${bookingId}`)
         .listen('NewChatMessage', (e) => {
-            console.log('New message received:', e);
-            // The event data is now directly the message object
-            appendMessage(e);
-            scrollToBottom();
+            console.log('Received new message event:', e);
+            const existingMessage = document.querySelector(`[data-message-id="${e.id}"]`);
+            if (!existingMessage) {
+                appendMessage(e);
+                scrollToBottom();
+                markMessagesAsRead();
+            }
         });
 
     // Mark messages as read
-    function markMessagesAsRead() {
-        fetch(`/frontend/bookings/${bookingId}/messages/read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    async function markMessagesAsRead() {
+        try {
+            const response = await fetch(`/frontend/bookings/${bookingId}/messages/read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to mark messages as read');
             }
-        });
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+        }
     }
 
-    // Load initial messages
+    // Initial load
     loadMessages();
     markMessagesAsRead();
 

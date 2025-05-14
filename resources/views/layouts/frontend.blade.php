@@ -208,6 +208,13 @@
 
     <!-- Core Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    </script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
@@ -241,6 +248,8 @@
 
     <!-- Custom Scripts -->
     <script src="{{ asset('js/main.js') }}"></script>
+
+    <!-- Pusher and Laravel Echo -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>
     <script>
@@ -261,7 +270,6 @@
             }
         });
     </script>
-
-    @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

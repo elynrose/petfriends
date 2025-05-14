@@ -128,9 +128,7 @@
                                                                 <i class="fas fa-star"></i> Review
                                                             </a>
                                                         @endif
-                                                        <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
-                                                            <i class="fas fa-comments"></i> Chat
-                                                        </a>
+                                                       
                                                     </div>
                                                 </div>
 
@@ -162,7 +160,12 @@
                                                             ($booking->status === 'new' ? 'success' : 'secondary')
                                                             ))) }}">
                                                             {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
-                                                        </span></p>
+                                                        </span>
+                                                    
+                                                        <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-comments"></i> Chat
+                                                        </a>
+                                                    </p>
                                                         </div>
                                                         <div class="col-md-6 col-sm-6">
                                                             <h6 class="text-muted mb-3">Credits & Duration</h6>

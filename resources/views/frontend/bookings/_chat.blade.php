@@ -66,14 +66,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load messages
     function loadMessages() {
-        fetch(`/bookings/${bookingId}/messages`)
+        fetch(`/frontend/bookings/${bookingId}/messages`)
             .then(response => response.json())
             .then(messages => {
                 messagesContainer.innerHTML = '';
-                messages.forEach(message => {
-                    appendMessage(message);
-                });
+                if (messages.length === 0) {
+                    messagesContainer.innerHTML = '<div class="text-center text-muted py-4">No messages yet. Start the conversation!</div>';
+                } else {
+                    messages.forEach(message => {
+                        appendMessage(message);
+                    });
+                }
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error loading messages:', error);
+                messagesContainer.innerHTML = '<div class="text-center text-danger py-4">Error loading messages. Please try again.</div>';
             });
     }
 
@@ -95,31 +103,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = messageInput.value.trim();
         if (!message) return;
 
-        fetch(`/bookings/${bookingId}/messages`, {
+        fetch(`/frontend/bookings/${bookingId}/messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
             },
             body: JSON.stringify({ message })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             messageInput.value = '';
             appendMessage(data);
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            alert('Failed to send message. Please try again.');
         });
     });
 
     // Listen for new messages
     Echo.private(`booking.${bookingId}`)
         .listen('NewChatMessage', (e) => {
-            appendMessage(e.message);
+            appendMessage(e);
             markMessagesAsRead();
         });
 
     // Mark messages as read
     function markMessagesAsRead() {
-        fetch(`/bookings/${bookingId}/messages/read`, {
+        fetch(`/frontend/bookings/${bookingId}/messages/read`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
