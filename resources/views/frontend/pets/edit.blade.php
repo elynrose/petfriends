@@ -100,7 +100,7 @@
                                 <div class="form-group">
                                     <div class="custom-control custom-checkbox">
                                         <input type="hidden" name="not_available" value="0">
-                                        <input type="checkbox" class="custom-control-input" name="not_available" id="not_available" value="1" {{ $pet->not_available || old('not_available', 0) === 1 ? 'checked' : '' }}>
+                                        <input type="checkbox" class="custom-control-input" name="not_available" id="not_available" value="1" {{ $pet->not_available ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="not_available">{{ trans('cruds.pet.fields.not_available') }}</label>
                                     </div>
                                     @if($errors->has('not_available'))
@@ -173,62 +173,73 @@
 @section('scripts')
 @parent
 <script>
-    var uploadedPhotoMap = {}
-    Dropzone.options.photoDropzone = {
-        url: '{{ route('frontend.pets.storeMedia') }}',
-        maxFilesize: 5, // MB
-        acceptedFiles: '.jpeg,.jpg,.png,.gif',
-        addRemoveLinks: true,
-        headers: {
-            'X-CSRF-TOKEN': "{{ csrf_token() }}"
-        },
-        params: {
-            size: 5,
-            width: 4096,
-            height: 4096
-        },
-        success: function (file, response) {
-            $('form').append('<input type="hidden" name="photo[]" value="' + response.name + '">')
-            uploadedPhotoMap[file.name] = response.name
-        },
-        removedfile: function (file) {
-            file.previewElement.remove()
-            var name = ''
-            if (typeof file.file_name !== 'undefined') {
-                name = file.file_name
-            } else {
-                name = uploadedPhotoMap[file.name]
-            }
-            $('form').find('input[name="photo[]"][value="' + name + '"]').remove()
-        },
-        init: function () {
-            @if(isset($pet) && $pet->photo)
-                var files = {!! json_encode($pet->photo) !!}
-                for (var i in files) {
-                    var file = files[i]
-                    this.options.addedfile.call(this, file)
-                    this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
-                    file.previewElement.classList.add('dz-complete')
-                    $('form').append('<input type="hidden" name="photo[]" value="' + file.file_name + '">')
-                }
-            @endif
-        },
-        error: function (file, response) {
-            if ($.type(response) === 'string') {
-                var message = response //dropzone sends it's own error messages in string
-            } else {
-                var message = response.errors.file
-            }
-            file.previewElement.classList.add('dz-error')
-            _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
-            _results = []
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                node = _ref[_i]
-                _results.push(node.textContent = message)
-            }
-            return _results
-        }
+    // Disable auto-discover before any Dropzone code runs
+    if (typeof Dropzone !== 'undefined') {
+        Dropzone.autoDiscover = false;
     }
+
+    var uploadedPhotoMap = {}
+
+    // Initialize Dropzone
+    $(document).ready(function() {
+        var myDropzone = new Dropzone("#photo-dropzone", {
+            url: '{{ route('frontend.pets.storeMedia') }}',
+            maxFilesize: 5, // MB
+            acceptedFiles: '.jpeg,.jpg,.png,.gif',
+            addRemoveLinks: true,
+            headers: {
+              'X-CSRF-TOKEN': "{{ csrf_token() }}"
+            },
+            params: {
+              size: 5,
+              width: 4096,
+              height: 4096
+            },
+            success: function (file, response) {
+              $('form').append('<input type="hidden" name="photo[]" value="' + response.name + '">')
+              uploadedPhotoMap[file.name] = response.name
+            },
+            removedfile: function (file) {
+              console.log(file)
+              file.previewElement.remove()
+              var name = ''
+              if (typeof file.file_name !== 'undefined') {
+                name = file.file_name
+              } else {
+                name = uploadedPhotoMap[file.name]
+              }
+              $('form').find('input[name="photo[]"][value="' + name + '"]').remove()
+            },
+            init: function () {
+        @if(isset($pet) && $pet->photo)
+              var files = {!! json_encode($pet->photo) !!}
+                  for (var i in files) {
+                  var file = files[i]
+                  this.options.addedfile.call(this, file)
+                  this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
+                  file.previewElement.classList.add('dz-complete')
+                  $('form').append('<input type="hidden" name="photo[]" value="' + file.file_name + '">')
+                }
+        @endif
+            },
+            error: function (file, response) {
+                 if ($.type(response) === 'string') {
+                     var message = response //dropzone sends it's own error messages in string
+                 } else {
+                     var message = response.errors.file
+                 }
+                 file.previewElement.classList.add('dz-error')
+                 _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
+                 _results = []
+                 for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                     node = _ref[_i]
+                     _results.push(node.textContent = message)
+                 }
+
+                 return _results
+             }
+        });
+    });
 
     // Add this new script for handling availability dates
     $(document).ready(function() {
@@ -248,6 +259,13 @@
         // Toggle on checkbox change
         $('#not_available').change(function() {
             toggleAvailabilityDates();
+        });
+
+        // Initialize date picker
+        $('.date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            startDate: new Date()
         });
     });
 </script>
