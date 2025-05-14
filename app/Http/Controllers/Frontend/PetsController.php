@@ -24,7 +24,7 @@ class PetsController extends Controller
         $query = Pet::query()
             ->where('not_available', false)
             ->when(Auth::check(), function($q) {
-                return $q->where('user_id', '!=', Auth::id());
+                return $q->where('user_id', '=', Auth::id());
             })
             ->when(request('type'), function($q) {
                 return $q->where('type', request('type'));
