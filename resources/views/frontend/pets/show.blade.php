@@ -26,7 +26,7 @@
                     <div class="row">
                         <!-- Photo Carousel -->
                         <div class="col-md-6 mb-4">
-                            @if($pet->photo->isNotEmpty())
+                            @if($pet->photo && $pet->photo->first())
                                 <div id="petCarousel" class="carousel slide" data-ride="carousel">
                                     @can('pet_delete')
                                         <div class="position-absolute" style="top: 10px; right: 10px; z-index: 10;">
@@ -40,7 +40,7 @@
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                        </div>
+                                        </div>
                                     @endcan
                                     <div class="carousel-inner">
                                         @foreach($pet->photo as $key => $media)
@@ -49,6 +49,9 @@
                                                      class="d-block w-100" 
                                                      alt="{{ $pet->name }}"
                                                      style="height: 400px; object-fit: cover;">
+                                                <div class="carousel-caption d-none d-md-block">
+                                                    <p>{{ $media->file_name }}</p>
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -261,6 +264,18 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer">
+                    @if(auth()->user()->canUseChat())
+                        <a href="{{ route('frontend.chats.create', ['pet_id' => $pet->id]) }}" class="btn btn-primary">
+                            <i class="fas fa-comments"></i> Chat with Owner
+                        </a>
+                    @else
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-crown"></i> Chat is a Premium feature. 
+                            <a href="{{ route('frontend.subscription.index') }}" class="alert-link">Upgrade to Premium</a> to start chatting!
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

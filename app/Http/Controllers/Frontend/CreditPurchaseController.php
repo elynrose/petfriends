@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use App\Notifications\CreditPurchase;
-use App\Notifications\CreditPurchaseReceipt;
 
 class CreditPurchaseController extends Controller
 {
@@ -63,16 +62,12 @@ class CreditPurchaseController extends Controller
         if ($session->payment_status === 'paid') {
             $user = auth()->user();
             $credits = (int)$request->credits;
-            $amount = $credits * env('CREDIT_PRICE', 12);
 
             // Use the addCredits method to properly handle credit addition and logging
             $user->addCredits(
                 $credits,
-                'Purchased ' . $credits . ' credits for $' . $amount
+                'Purchased ' . $credits . ' credits for $' . ($credits * env('CREDIT_PRICE', 12))
             );
-
-            // Send receipt email
-            $user->notify(new CreditPurchaseReceipt($credits, $amount));
 
             return redirect()->route('frontend.credits.purchase')->with('success', 'Successfully purchased ' . $credits . ' credits!');
         }

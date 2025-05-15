@@ -327,6 +327,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(CreditLog::class);
     }
 
+    public function pets()
+    {
+        return $this->hasMany(Pet::class);
+    }
+
     public function hasEnoughCredits(int $credits)
     {
         return $this->credits >= $credits;
@@ -335,5 +340,29 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getCreditsAttribute($value)
     {
         return (int) $value;
+    }
+
+    public function isPremium()
+    {
+        return $this->is_premium;
+    }
+
+    public function canAddMorePets()
+    {
+        if ($this->isPremium()) {
+            return true;
+        }
+        
+        return $this->pets()->count() < 1;
+    }
+
+    public function canUseChat()
+    {
+        return $this->isPremium();
+    }
+
+    public function canUseSmsNotifications()
+    {
+        return $this->isPremium();
     }
 }

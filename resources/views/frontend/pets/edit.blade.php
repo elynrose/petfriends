@@ -23,6 +23,13 @@
                                 <div class="form-group">
                                     <label class="required" for="photo">{{ trans('cruds.pet.fields.photo') }}</label>
                                     <div class="needsclick dropzone" id="photo-dropzone">
+                                        @foreach($pet->photo as $media)
+                                            <div class="dz-preview dz-file-preview">
+                                                <div class="dz-details">
+                                                    <div class="dz-filename"><span data-dz-name>{{ $media->file_name }}</span></div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                     @if($errors->has('photo'))
                                         <div class="invalid-feedback">
@@ -162,6 +169,21 @@
                                 </div>
                             </div>
                         </div>
+
+                        @if($pet->canBeFeatured())
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="feature_pet" name="feature_pet" value="1">
+                                    <label class="custom-control-label" for="feature_pet">Feature my pet for 1 hour</label>
+                                </div>
+                                <small class="form-text text-muted">Premium feature: Your pet will be shown in the featured section on the home page for 1 hour.</small>
+                            </div>
+                        @elseif($pet->isFeatured())
+                            <div class="alert alert-info">
+                                <i class="fas fa-star"></i> This pet is currently featured until {{ $pet->featured_until->format('g:i A') }}
+                            </div>
+                        @endif
+
                         <div class="form-group">
                             <button class="btn btn-primary" type="submit">
                                 {{ trans('global.save') }}

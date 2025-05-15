@@ -175,12 +175,6 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::get('credits/purchase', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'showPurchaseForm'])->name('credits.purchase');
     Route::post('credits/checkout', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'createCheckoutSession'])->name('credits.checkout');
     Route::get('credits/success', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'handleSuccess'])->name('credits.success');
-
-    // Subscription routes
-    Route::get('subscription', 'SubscriptionController@showSubscriptionPage')->name('subscription.index');
-    Route::post('subscription/checkout', 'SubscriptionController@createCheckoutSession')->name('subscription.checkout');
-    Route::get('subscription/success', 'SubscriptionController@handleSuccess')->name('subscription.success');
-    Route::post('subscription/cancel', 'SubscriptionController@cancel')->name('subscription.cancel');
 });
 
 // Two Factor Authentication routes

@@ -9,55 +9,67 @@ use Carbon\Carbon;
 
 class HomeController
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Check if user is logged in and has required location information
-        if (Auth::check()) {
-            $user = Auth::user();
-            if (empty($user->state) || empty($user->city) || empty($user->zip_code)) {
-                return redirect()->route('frontend.profile.index')
-                    ->with('warning', 'Please complete your location information (State, City, and Zip Code) before adding or viewing pets.');
-            }
-        }
-
-        $query = Pet::query()
-            ->where('not_available', false)
-            ->when(Auth::check(), function($q) {
-                return $q->where('user_id', '!=', Auth::id());
-            })
-            ->when(request('type'), function($q) {
-                return $q->where('type', request('type'));
-            })
-            ->when(request('zip_code'), function($q) {
-                return $q->whereHas('user', function($q) {
-                    $q->where('zip_code', 'like', '%' . request('zip_code') . '%');
-                });
-            })
-            ->when(request('date_from'), function($q) {
-                $dateFrom = Carbon::parse(request('date_from'))->format('Y-m-d');
-                return $q->where(function($q) use ($dateFrom) {
-                    $q->whereNull('from')
-                      ->orWhere('from', '<=', $dateFrom);
-                });
-            })
-         
-            ->when(request('date_to'), function($q) {
-                $dateTo = Carbon::parse(request('date_to'))->format('Y-m-d');
-                return $q->where(function($q) use ($dateTo) {
-                    $q->whereNull('to')
-                      ->orWhere('to', '>=', $dateTo);
-                });
-            });
-
-        // Always exclude current user's pets
-        if (Auth::check()) {
-            $query->where('user_id', '!=', Auth::id());
-        }
-
-        $pets = $query->with(['petReviews', 'user', 'photo'])->get();
+        $user = Auth::user();
+        $userLocation = null;
+        $pets = collect();
+        $featuredPets = collect();
         $petTypes = Pet::TYPE_SELECT;
 
-        return view('frontend.home', compact('pets', 'petTypes'));
+        if ($user) {
+            $userLocation = $user->location;
+            
+            // Get featured pets with detailed debugging
+            $featuredQuery = Pet::with(['user', 'photo'])
+                ->where('featured_until', '>', now())
+                ->where('not_available', false)
+                ->take(4);
+
+            \Log::info('Featured Pets Query SQL:', [
+                'sql' => $featuredQuery->toSql(),
+                'bindings' => $featuredQuery->getBindings(),
+                'now' => now()->toDateTimeString()
+            ]);
+
+            $featuredPets = $featuredQuery->get();
+
+            \Log::info('Featured Pets Results:', [
+                'count' => $featuredPets->count(),
+                'pets' => $featuredPets->map(function($pet) {
+                    return [
+                        'id' => $pet->id,
+                        'name' => $pet->name,
+                        'featured_until' => $pet->featured_until,
+                        'not_available' => $pet->not_available,
+                        'user_id' => $pet->user_id,
+                        'current_user_id' => Auth::id(),
+                        'time_diff' => now()->diffInMinutes($pet->featured_until)
+                    ];
+                })
+            ]);
+
+            // Get available pets
+            $query = Pet::with(['user', 'photo'])
+                ->where('not_available', false)
+                ->where('user_id', '!=', $user->id);
+
+            if ($request->has('type') && $request->type !== '') {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->has('gender') && $request->gender !== '') {
+                $query->where('gender', $request->gender);
+            }
+
+            if ($request->has('age') && $request->age !== '') {
+                $query->where('age', '<=', $request->age);
+            }
+
+            $pets = $query->get();
+        }
+
+        return view('frontend.home', compact('pets', 'featuredPets', 'userLocation', 'petTypes'));
     }
 
     public function checkIfUserStateCityAndZipIsFilled()

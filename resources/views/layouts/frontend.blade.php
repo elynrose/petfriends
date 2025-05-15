@@ -65,6 +65,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.subscription.*') ? 'active' : '' }}" href="{{ route('frontend.subscription.index') }}">
+                                    <i class="fas fa-crown"></i> Premium
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('frontend.bookings.') ? 'active' : '' }}" href="{{ route('frontend.bookings.index') }}">
                                     <i class="fas fa-calendar-alt"></i> My Bookings
                                 </a>

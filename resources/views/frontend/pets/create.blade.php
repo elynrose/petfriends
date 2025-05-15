@@ -3,6 +3,18 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-12">
+            @if(!auth()->user()->canAddMorePets())
+                <div class="alert alert-warning">
+                    <h4 class="alert-heading">Premium Feature</h4>
+                    <p>You've reached the limit of 1 pet for free users. Upgrade to Premium to add more pets!</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="{{ route('frontend.subscription.index') }}" class="btn btn-primary">
+                            <i class="fas fa-crown"></i> Upgrade to Premium
+                        </a>
+                    </p>
+                </div>
+            @endif
 
             <div class="card">
                 <div class="card-header">
@@ -138,6 +150,7 @@
                             <span class="help-block">{{ trans('cruds.pet.fields.to_time_helper') }}</span>
                         </div>
                         <div class="form-group">
+                            <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
                             <button class="btn btn-danger" type="submit">
                                 {{ trans('global.save') }}
                             </button>

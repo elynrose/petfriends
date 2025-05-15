@@ -50,9 +50,14 @@ class Pet extends Model implements HasMedia
         'to',
         'to_time',
         'user_id',
+        'featured_until',
         'created_at',
         'updated_at',
         'deleted_at',
+    ];
+
+    protected $casts = [
+        'featured_until' => 'datetime',
     ];
 
     public function user()
@@ -117,5 +122,25 @@ class Pet extends Model implements HasMedia
     public function setToAttribute($value)
     {
         $this->attributes['to'] = $value ? Carbon::createFromFormat(config('panel.date_format'), $value)->format('Y-m-d') : null;
+    }
+
+    public function isFeatured()
+    {
+        return $this->featured_until && $this->featured_until->isFuture();
+    }
+
+    public function canBeFeatured()
+    {
+        return $this->user->isPremium() && !$this->isFeatured();
+    }
+
+    public function feature()
+    {
+        if (!$this->canBeFeatured()) {
+            return false;
+        }
+
+        $this->featured_until = now()->addHour();
+        return $this->save();
     }
 }
