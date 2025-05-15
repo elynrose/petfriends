@@ -148,6 +148,15 @@ class ChatController extends Controller
                 return response()->json(['error' => 'Unauthorized access'], 403);
             }
 
+            // Check if user has premium access
+            if (!Auth::user()->canUseChat()) {
+                \Log::warning('Non-premium user attempting to access chat', [
+                    'booking_id' => $booking->id,
+                    'user_id' => Auth::id()
+                ]);
+                return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
+            }
+
             $messages = Chat::with(['from' => function($query) {
                     $query->with('media');
                 }])
@@ -207,6 +216,15 @@ class ChatController extends Controller
                 'pet_user_id' => $booking->pet->user_id
             ]);
             abort(403);
+        }
+
+        // Check if user has premium access
+        if (!Auth::user()->canUseChat()) {
+            \Log::warning('Non-premium user attempting to send message', [
+                'booking_id' => $booking->id,
+                'user_id' => Auth::id()
+            ]);
+            return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
         }
 
         try {
@@ -309,6 +327,11 @@ class ChatController extends Controller
         // Check if user is authorized to mark messages as read
         if (Auth::id() !== $booking->user_id && Auth::id() !== $booking->pet->user_id) {
             abort(403);
+        }
+
+        // Check if user has premium access
+        if (!Auth::user()->canUseChat()) {
+            return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
         }
 
         Chat::where('booking_id', $booking->id)

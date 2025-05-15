@@ -104,7 +104,7 @@
                                                                     @csrf
                                                                     @method('DELETE')
                                                                     <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                                        <i class="fas fa-times"></i> Cancel
+                                                                        <i class="fas fa-trash"></i>
                                                                     </button>
                                                 </form>
                                             @endcan
@@ -118,16 +118,11 @@
                                                                 <button type="submit" 
                                                                         class="btn btn-outline-success btn-sm"
                                                                         onclick="return confirm('{{ trans('global.completeBookingConfirmation') }}')">
-                                                                    <i class="fas fa-check"></i> Complete
+                                                                    <i class="fas fa-check"></i> Completed
                                                                 </button>
                                                             </form>
                                                         @endif
-                                                        @if($booking->status === 'completed' && !$booking->review)
-                                                            <a href="{{ route('frontend.pet-reviews.create', $booking->id) }}" 
-                                                               class="btn btn-outline-primary btn-sm">
-                                                                <i class="fas fa-star"></i> Review
-                                                            </a>
-                                                        @endif
+                                                     
                                                        
                                                     </div>
                                                 </div>
@@ -162,10 +157,26 @@
                                                             {{ App\Models\Booking::STATUS_SELECT[$booking->status] ?? 'Unknown' }}
                                                         </span>
                                                     
-                                                        <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
-                                                            <i class="fas fa-comments"></i> Chat
-                                                        </a>
-                                                    </p>
+                                                        <p>
+                                                            <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </a>
+                                                            @if(auth()->user()->canUseChat())
+                                                                <a href="{{ route('frontend.bookings.show', $booking->id) }}" class="btn btn-outline-primary btn-sm">
+                                                                    <i class="fas fa-comments"></i> Chat
+                                                                </a>
+                                                            @else
+                                                                <button class="btn btn-outline-secondary btn-sm chat-button" title="Chat is a premium feature">
+                                                                    <i class="fas fa-comments"></i> Chat
+                                                                </button>
+                                                            @endif
+                                                            @if($booking->status === 'completed' && !$booking->review)
+                                                            <a href="{{ route('frontend.pet-reviews.create', $booking->id) }}" 
+                                                               class="btn btn-outline-primary btn-sm">
+                                                                <i class="fas fa-star"></i> Review
+                                                            </a>
+                                                        @endif
+                                                        </p>
                                                         </div>
                                                         <div class="col-md-6 col-sm-6">
                                                             <h6 class="text-muted mb-3">Credits & Duration</h6>
@@ -224,6 +235,50 @@
         </div>
     </div>
 </div>
+
+<!-- Premium Upgrade Modal -->
+<div class="modal fade" id="premiumUpgradeModal" tabindex="-1" role="dialog" aria-labelledby="premiumUpgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="premiumUpgradeModalLabel">
+                    <i class="fas fa-crown text-warning"></i> Upgrade to Premium
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-comments fa-3x text-primary mb-3"></i>
+                    <h4>Unlock Premium Features</h4>
+                    <p class="text-muted">Get access to chat with other pet owners and more premium features!</p>
+                </div>
+                <div class="premium-features">
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Unlimited Chat Access</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Priority Support</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Advanced Pet Search</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Maybe Later</button>
+                <a href="{{ route('frontend.subscription.index') }}" class="btn btn-primary">
+                    <i class="fas fa-crown"></i> Upgrade Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('styles')
@@ -278,6 +333,34 @@
             border-radius: 8px 8px 0 0;
         }
     }
+    .premium-features {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .feature-item i {
+        font-size: 1.2rem;
+    }
+    .modal-content {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .modal-header {
+        border-bottom: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        border-radius: 1rem 1rem 0 0;
+    }
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        border-radius: 0 0 1rem 1rem;
+    }
 </style>
 @endsection
 
@@ -297,6 +380,12 @@
                 $('.booking-item').hide();
                 $('.booking-item[data-status="' + filter + '"]').show();
             }
+        });
+
+        // Add click handler for chat buttons
+        $('.chat-button').click(function(e) {
+            e.preventDefault();
+            $('#premiumUpgradeModal').modal('show');
         });
     });
 </script>

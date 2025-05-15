@@ -38,7 +38,7 @@
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
+                    <img src="{{ asset('images/logo.png') }}" alt="Dolce" height="40">
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
@@ -168,11 +168,15 @@
                                     @can('user_alert_access')
                                         <a class="dropdown-item" href="{{ route('frontend.user-alerts.index') }}">
                                             {{ trans('cruds.userAlert.title') }}
+                                            @php($alertsCount = \Auth::user()->userUserAlerts()->where('read', false)->count())
+                                            @if($alertsCount > 0)
+                                                <span class="badge badge-danger">{{ $alertsCount }}</span>
+                                            @endif
                                         </a>
                                     @endcan
 
                                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
+                                                document.getElementById('logout-form').submit();">
                                         {{ __('Logout') }}
                                     </a>
 
@@ -241,45 +245,24 @@
     <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
     <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/16.0.0/classic/ckeditor.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.full.min.js"></script>
-
-    <!-- Dropzone -->
-    <script>
-        // Disable Dropzone auto-discover before loading the script
-        if (typeof Dropzone !== 'undefined') {
-            Dropzone.autoDiscover = false;
-        }
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
-
-    <!-- Custom Scripts -->
     <script src="{{ asset('js/main.js') }}"></script>
 
     <!-- Pusher and Laravel Echo -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
     <script>
-        window.Pusher = Pusher;
         window.Echo = new Echo({
             broadcaster: 'pusher',
             key: '{{ config('broadcasting.connections.pusher.key') }}',
             cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
-            forceTLS: true,
-            enabledTransports: ['ws', 'wss'],
-            disableStats: true,
-            encrypted: true,
-            authEndpoint: '/broadcasting/auth',
-            auth: {
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            }
+            forceTLS: true
         });
     </script>
+
     @yield('scripts')
 </body>
 </html>

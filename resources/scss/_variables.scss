@@ -1,0 +1,136 @@
+// Colors
+$primary: #FF8C00;      // Deep Orange - Main brand color
+$secondary: #2E8B57;    // Sea Green - Accent color
+$accent: #FFD700;       // Gold - Highlight color
+
+// Neutral Colors
+$white: #FFFFFF;
+$light-gray: #F8F9FA;
+$medium-gray: #E9ECEF;
+$dark-gray: #495057;
+$black: #212529;
+
+// Semantic Colors
+$success: #28A745;      // Green
+$warning: #FFC107;      // Yellow
+$error: #DC3545;       // Red
+$info: #17A2B8;        // Blue
+
+// Typography
+$font-primary: 'Poppins', sans-serif;
+$font-secondary: 'Inter', sans-serif;
+
+// Font Sizes
+$text-xs: 0.75rem;    // 12px
+$text-sm: 0.875rem;   // 14px
+$text-base: 1rem;     // 16px
+$text-lg: 1.125rem;   // 18px
+$text-xl: 1.25rem;    // 20px
+$text-2xl: 1.5rem;    // 24px
+$text-3xl: 1.875rem;  // 30px
+$text-4xl: 2.25rem;   // 36px
+
+// Font Weights
+$font-light: 300;
+$font-regular: 400;
+$font-medium: 500;
+$font-semibold: 600;
+$font-bold: 700;
+
+// Spacing
+$spacing-1: 0.25rem;   // 4px
+$spacing-2: 0.5rem;    // 8px
+$spacing-3: 0.75rem;   // 12px
+$spacing-4: 1rem;      // 16px
+$spacing-6: 1.5rem;    // 24px
+$spacing-8: 2rem;      // 32px
+$spacing-12: 3rem;     // 48px
+$spacing-16: 4rem;     // 64px
+
+// Border Radius
+$radius-sm: 0.25rem;   // 4px
+$radius-md: 0.5rem;    // 8px
+$radius-lg: 1rem;      // 16px
+$radius-full: 9999px;  // Full rounded
+
+// Shadows
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// Breakpoints
+$breakpoints: (
+  'sm': 640px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+  '2xl': 1536px
+);
+
+// Z-index
+$z-index: (
+  'dropdown': 1000,
+  'sticky': 1020,
+  'fixed': 1030,
+  'modal-backdrop': 1040,
+  'modal': 1050,
+  'popover': 1060,
+  'tooltip': 1070
+);
+
+// Container
+$container-max-width: 1200px;
+$container-padding: $spacing-4;
+
+// Grid
+$grid-columns: 12;
+$grid-gap: $spacing-6;
+
+// Forms
+$input-height: 2.5rem;
+$input-padding: $spacing-3;
+$input-border-width: 2px;
+$input-border-color: $medium-gray;
+$input-border-radius: $radius-md;
+$input-focus-border-color: $primary;
+
+// Buttons
+$button-height: 2.5rem;
+$button-padding-x: $spacing-6;
+$button-padding-y: $spacing-3;
+$button-border-radius: $radius-md;
+$button-font-weight: $font-medium;
+
+// Cards
+$card-padding: $spacing-6;
+$card-border-radius: $radius-lg;
+$card-shadow: $shadow-md;
+$card-hover-shadow: $shadow-lg;
+$card-hover-transform: translateY(-4px);
+
+// Navigation
+$navbar-height: 4rem;
+$navbar-padding: $spacing-4;
+$navbar-shadow: $shadow-sm;
+$navbar-background: $white;
+$navbar-link-padding: $spacing-2 $spacing-4;
+$navbar-link-color: $dark-gray;
+$navbar-link-hover-color: $primary;
+$navbar-link-active-color: $primary;
+
+// Icons
+$icon-sm: 1rem;
+$icon-md: 1.5rem;
+$icon-lg: 2rem;
+
+// Dark Mode Colors
+$dark-mode-background: #1A1A1A;
+$dark-mode-text: #FFFFFF;
+$dark-mode-card-bg: #2D2D2D;
+$dark-mode-border: #404040; 
