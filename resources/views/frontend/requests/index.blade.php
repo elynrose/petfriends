@@ -76,7 +76,7 @@
                                                      alt="{{ $booking->pet->name ?? 'Pet' }}"
                                                      onerror="this.onerror=null; this.src='{{ asset('images/pet-placeholder.jpg') }}';">
                                                      @if($booking->pet->user->photo)
-                                                          <img src="{{ $booking->pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: 10px; right: 10px;">
+                                                          <img src="{{ $booking->pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: -25px; right: 10px;">
                                                      @endif
                                                     </div>
                                             @else

@@ -54,7 +54,7 @@ class HomeController
             $query->where('user_id', '!=', Auth::id());
         }
 
-        $pets = $query->get();
+        $pets = $query->with(['petReviews', 'user', 'photo'])->get();
         $petTypes = Pet::TYPE_SELECT;
 
         return view('frontend.home', compact('pets', 'petTypes'));

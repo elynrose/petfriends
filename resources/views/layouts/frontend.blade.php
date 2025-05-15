@@ -60,6 +60,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.credits.purchase') ? 'active' : '' }}" href="{{ route('frontend.credits.purchase') }}">
+                                    <i class="fas fa-coins"></i> Buy Credits
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('frontend.bookings.') ? 'active' : '' }}" href="{{ route('frontend.bookings.index') }}">
                                     <i class="fas fa-calendar-alt"></i> My Bookings
                                 </a>

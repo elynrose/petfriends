@@ -70,6 +70,12 @@ class Pet extends Model implements HasMedia
         return $this->hasMany(PetReview::class, 'pet_id');
     }
 
+    public function photo()
+    {
+        return $this->morphMany(Media::class, 'model')
+            ->where('collection_name', 'photo');
+    }
+
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');

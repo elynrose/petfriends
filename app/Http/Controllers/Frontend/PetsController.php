@@ -46,6 +46,7 @@ class PetsController extends Controller
                       ->orWhere('to', '>=', request('date_to'));
                 });
             })
+            ->with(['petReviews', 'user', 'photo'])
             ->withCount(['bookings' => function($query) {
                 $query->where('status', 'pending');
             }]);

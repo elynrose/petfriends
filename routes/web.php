@@ -4,6 +4,7 @@ use App\Http\Controllers\Frontend\BookingController;
 use App\Http\Controllers\Frontend\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Frontend\CreditPurchaseController;
 
 Route::view('/', 'welcome');
 Route::get('userVerification/{token}', 'UserVerificationController@approve')->name('userVerification');
@@ -169,6 +170,11 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
 
     Route::get('credit-logs', [App\Http\Controllers\Frontend\CreditLogController::class, 'index'])->name('credit-logs.index');
+
+    // Credit purchase routes
+    Route::get('credits/purchase', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'showPurchaseForm'])->name('credits.purchase');
+    Route::post('credits/checkout', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'createCheckoutSession'])->name('credits.checkout');
+    Route::get('credits/success', [App\Http\Controllers\Frontend\CreditPurchaseController::class, 'handleSuccess'])->name('credits.success');
 });
 
 // Two Factor Authentication routes

@@ -51,7 +51,7 @@
                                     <img src="{{ $media->getUrl() }}" class="img-fluid" alt="{{ $pet->name }}">
                                     <!--show pet owner photo in a small circle at the bottom right corner-->
                                     @if($pet->user->photo)
-                                        <img src="{{ $pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: 10px; right: 10px;">
+                                        <img src="{{ $pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: -25px; right: 10px;">
                                     @endif
                                 @endforeach
                             </div>
@@ -64,6 +64,28 @@
                                   @endif
                                 </h5>
                                 <p class="card-text">
+                                    @php
+                                        $averageRating = $pet->petReviews ? $pet->petReviews->avg('score') : 0;
+                                        $fullStars = floor($averageRating);
+                                        $halfStar = $averageRating - $fullStars >= 0.5;
+                                        $emptyStars = 5 - $fullStars - ($halfStar ? 1 : 0);
+                                    @endphp
+                                    <div class="pet-rating mb-2">
+                                        @if($pet->petReviews && $pet->petReviews->count() > 0)
+                                            @for($i = 0; $i < $fullStars; $i++)
+                                                <i class="fas fa-star text-warning"></i>
+                                            @endfor
+                                            @if($halfStar)
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            @endif
+                                            @for($i = 0; $i < $emptyStars; $i++)
+                                                <i class="far fa-star text-warning"></i>
+                                            @endfor
+                                            <span class="ml-1">({{ number_format($averageRating, 1) }})</span>
+                                        @else
+                                            <span class="text-muted">No reviews yet</span>
+                                        @endif
+                                    </div>
                                     <strong>{{ trans('cruds.pet.fields.type') }}:</strong> {{ App\Models\Pet::TYPE_SELECT[$pet->type] ?? '' }}<br>
                                     <strong>{{ trans('cruds.pet.fields.age') }}:</strong> {{ $pet->age ?? '' }}<br>
                                     <strong>{{ trans('cruds.pet.fields.gender') }}:</strong> {{ App\Models\Pet::GENDER_SELECT[$pet->gender] ?? '' }}<br>
@@ -303,6 +325,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+    .pet-rating {
+        font-size: 1.1em;
+    }
+    .pet-rating i {
+        margin-right: 2px;
+    }
+    .pet-rating span {
+        color: #6c757d;
+        font-size: 0.9em;
     }
 </style>
 @endsection
