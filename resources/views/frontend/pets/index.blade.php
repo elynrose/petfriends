@@ -98,13 +98,7 @@
                                         <br><strong>Credits to use:</strong> -{{ $hours }} credits
                                     @endif
                                 </p>
-                                <div class="btn-group">
-                                    @if($pet->user_id === Auth::user()->id)
-                                        <a href="{{ route('frontend.pets.edit', $pet->id) }}" class="btn btn-primary">
-                                            <i class="fa fa-pencil"></i> Edit Pet
-                                        </a>
-                                    @endif
-                                </div>
+                              
                             </div>
                         </div>
                     </div>

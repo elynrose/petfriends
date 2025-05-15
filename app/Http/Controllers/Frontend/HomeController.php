@@ -24,6 +24,10 @@ class HomeController
             $featuredQuery = Pet::with(['user', 'photo'])
                 ->where('featured_until', '>', now())
                 ->where('not_available', false)
+                ->where(function($q) {
+                    $q->whereNull('from')
+                      ->orWhere('from', '>=', now()->startOfDay());
+                })
                 ->take(4);
 
             \Log::info('Featured Pets Query SQL:', [
@@ -44,7 +48,8 @@ class HomeController
                         'not_available' => $pet->not_available,
                         'user_id' => $pet->user_id,
                         'current_user_id' => Auth::id(),
-                        'time_diff' => now()->diffInMinutes($pet->featured_until)
+                        'time_diff' => now()->diffInMinutes($pet->featured_until),
+                        'from' => $pet->from
                     ];
                 })
             ]);
@@ -52,7 +57,11 @@ class HomeController
             // Get available pets
             $query = Pet::with(['user', 'photo'])
                 ->where('not_available', false)
-                ->where('user_id', '!=', $user->id);
+                ->where('user_id', '!=', $user->id)
+                ->where(function($q) {
+                    $q->whereNull('from')
+                      ->orWhere('from', '>=', now()->startOfDay());
+                });
 
             if ($request->has('type') && $request->type !== '') {
                 $query->where('type', $request->type);

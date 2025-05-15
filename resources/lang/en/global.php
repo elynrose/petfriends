@@ -2,7 +2,7 @@
 
 return [
     'actions'                        => 'Actions',
-    'moreinfo'                       => 'More info',
+    'moreinfo'                       => 'Details',
     'book'                           => 'Book this pet',
     'my_bookings'                    => 'My Bookings',
     'my_pets'                        => 'My Pets',
