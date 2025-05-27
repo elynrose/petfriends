@@ -18,8 +18,17 @@ class CreditService
      */
     public function calculateBookingHours(Booking $booking): int
     {
-        $start = Carbon::parse($booking->from . ' ' . $booking->from_time);
-        $end = Carbon::parse($booking->to . ' ' . $booking->to_time);
+        // Use the now reliable start_time and end_time
+        if (!$booking->start_time || !$booking->end_time) {
+            // This case should ideally not be hit if the 'saving' event on Booking model works correctly.
+            // Logging an error if this happens is important.
+            \Log::error("Booking {$booking->id} missing start_time or end_time for calculation. Falling back to legacy from/from_time fields to avoid immediate breakage, but this needs investigation.");
+            $start = Carbon::parse($booking->from . ' ' . $booking->from_time);
+            $end = Carbon::parse($booking->to . ' ' . $booking->to_time);
+        } else {
+            $start = $booking->start_time; // Already a Carbon instance due to $dates cast
+            $end = $booking->end_time;     // Already a Carbon instance due to $dates cast
+        }
         
         // Calculate hours, rounding up to the nearest hour
         $hours = ceil($end->diffInMinutes($start) / 60);

@@ -164,11 +164,20 @@ class BookingController extends Controller
                 ->with('error', 'Only accepted bookings can be completed.');
         }
 
-        // Validate booking dates
-        $from = Carbon::parse($booking->from . ' ' . $booking->from_time);
-        $to = Carbon::parse($booking->to . ' ' . $booking->to_time);
+        // Validate booking dates using the model's start_time and end_time
+        // Ensure these are populated, especially for older records.
+        // The Booking model's 'saving' event handles this for new/updated ones.
+        // For this controller action, we assume they are available.
+        // If not, it implies an issue that should be caught earlier or logged.
+        if (!$booking->start_time || !$booking->end_time) {
+            // This might happen if the model wasn't saved after 'from'/'to' were set,
+            // or if it's an old record and FixBookingDates hasn't run or model accessors aren't used.
+             \Log::error("Booking {$booking->id} in complete action is missing start_time or end_time.");
+            return redirect()->route('frontend.requests.index')
+                ->with('error', 'Booking date information is incomplete. Please contact support.');
+        }
 
-        if ($to->lt($from)) {
+        if ($booking->end_time->lt($booking->start_time)) {
             return redirect()->route('frontend.requests.index')
                 ->with('error', 'Invalid booking dates: End date/time must be after start date/time.');
         }

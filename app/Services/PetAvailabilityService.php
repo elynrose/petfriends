@@ -12,8 +12,7 @@ class PetAvailabilityService
 {
     const MIN_HOURS = 1;
     const MAX_HOURS = 24;
-    const START_TIME = '06:00';
-    const END_TIME = '22:00';
+    // START_TIME and END_TIME constants are removed
     const MIN_DURATION = 60; // minutes
 
     /**
@@ -54,8 +53,23 @@ class PetAvailabilityService
 
         $startHour = $start->hour;
         $endHour = $end->hour;
-        if ($startHour < 6 || $startHour >= 22 || $endHour < 6 || $endHour >= 22) {
-            $errors[] = 'Bookings are only allowed between 6 AM and 10 PM.';
+
+        $configStartHour = config('pets.availability_start_hour', 6); // Default to 6 AM if not set
+        $configEndHour = config('pets.availability_end_hour', 22);   // Default to 10 PM (22:00) if not set
+
+        // This logic replicates the original condition:
+        // ($startHour < 6 || $startHour >= 22 || $endHour < 6 || $endHour >= 22)
+        // A booking is valid if it starts at $configStartHour (e.g. 06:00)
+        // and ends *before* $configEndHour (e.g. latest end is 21:59).
+        // So, if $startHour is $configEndHour (22), it's invalid.
+        // If $endHour is $configEndHour (22), it's invalid.
+        if ($startHour < $configStartHour || $startHour >= $configEndHour ||
+            $endHour < $configStartHour || $endHour >= $configEndHour) {
+            $errors[] = sprintf(
+                'Bookings are only allowed between %s and %s.',
+                Carbon::createFromTime($configStartHour)->format('g A'),
+                Carbon::createFromTime($configEndHour)->format('g A')
+            );
         }
 
         return $errors;

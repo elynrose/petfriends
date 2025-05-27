@@ -18,6 +18,8 @@ class Booking extends Model implements HasMedia
 {
     use SoftDeletes, InteractsWithMedia, HasFactory, Notifiable;
 
+    private CreditService $creditService;
+
     public $table = 'bookings';
 
     protected $appends = [
@@ -50,6 +52,18 @@ class Booking extends Model implements HasMedia
         'deleted_at',
     ];
 
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->creditService = app(CreditService::class); // Default instantiation, can be overridden by setter or tests
+    }
+
+    // Optional: A setter method if direct injection post-construction is needed, though constructor is preferred.
+    // public function setCreditService(CreditService $creditService)
+    // {
+    //     $this->creditService = $creditService;
+    // }
+
     public const STATUS_SELECT = [
         'pending'   => 'Pending',
         'accepted'  => 'Accepted',
@@ -67,6 +81,20 @@ class Booking extends Model implements HasMedia
     {
         parent::boot();
         self::observe(new \App\Observers\BookingActionObserver);
+
+        // Populate start_time and end_time from from/to and from_time/to_time
+        static::saving(function ($model) {
+            if (isset($model->from) && isset($model->from_time)) {
+                // Ensure 'from' is treated as date-only before combining
+                $fromDate = Carbon::parse($model->from)->format('Y-m-d');
+                $model->start_time = Carbon::parse($fromDate . ' ' . $model->from_time);
+            }
+            if (isset($model->to) && isset($model->to_time)) {
+                // Ensure 'to' is treated as date-only before combining
+                $toDate = Carbon::parse($model->to)->format('Y-m-d');
+                $model->end_time = Carbon::parse($toDate . ' ' . $model->to_time);
+            }
+        });
     }
 
     public function registerMediaConversions(Media $media = null): void
@@ -102,11 +130,6 @@ class Booking extends Model implements HasMedia
         return $this->hasOne(Review::class);
     }
 
-    public function photos()
-    {
-        return $this->morphMany(Media::class, 'model');
-    }
-
     /**
      * Complete the booking and award credits to the user
      *
@@ -129,19 +152,16 @@ class Booking extends Model implements HasMedia
                     throw new \Exception('Caregiver not found for this booking.');
                 }
 
-                // Get credit service instance
-                $creditService = app(CreditService::class);
-                
                 // Calculate hours using the service
-                $hours = $creditService->calculateBookingHours($this);
+                $hours = $this->creditService->calculateBookingHours($this);
 
                 // Deduct credits from pet owner
-                if (!$creditService->deductCreditsForBooking($this->pet->user, $this)) {
+                if (!$this->creditService->deductCreditsForBooking($this->pet->user, $this)) {
                     throw new \Exception('Failed to deduct credits from pet owner.');
                 }
 
                 // Award credits to caregiver
-                if (!$creditService->awardCreditsForBooking($this->user, $this)) {
+                if (!$this->creditService->awardCreditsForBooking($this->user, $this)) {
                     throw new \Exception('Failed to award credits to caregiver.');
                 }
 
@@ -190,11 +210,8 @@ class Booking extends Model implements HasMedia
                     throw new \Exception('Pet or pet owner not found for this booking.');
                 }
 
-                // Get credit service instance
-                $creditService = app(CreditService::class);
-                
                 // Refund credits to pet owner
-                if (!$creditService->refundCreditsForBooking($this->pet->user, $this)) {
+                if (!$this->creditService->refundCreditsForBooking($this->pet->user, $this)) {
                     throw new \Exception('Failed to refund credits to pet owner.');
                 }
 
@@ -224,8 +241,7 @@ class Booking extends Model implements HasMedia
      */
     public function userHasEnoughCredits()
     {
-        $creditService = app(CreditService::class);
-        return $creditService->hasEnoughCreditsForBooking($this->user, $this);
+        return $this->creditService->hasEnoughCreditsForBooking($this->user, $this);
     }
 
     /**
@@ -235,7 +251,6 @@ class Booking extends Model implements HasMedia
      */
     public function deductUserCredits()
     {
-        $creditService = app(CreditService::class);
-        return $creditService->deductCreditsForBooking($this->user, $this);
+        return $this->creditService->deductCreditsForBooking($this->user, $this);
     }
 }
