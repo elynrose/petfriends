@@ -25,18 +25,29 @@ class CreditPurchase extends Notification
 
     public function toMail($notifiable)
     {
+        $formattedAmount = number_format($this->amount, 2);
+        $purchaseDate = now()->format('F j, Y g:i A');
+
         return (new MailMessage)
-            ->subject('Credit Purchase Confirmed - PetPal Club')
+            ->subject('Credit Purchase Confirmed - PetFriends')
             ->view('emails.credit-purchase', [
                 'credits' => $this->credits,
-                'amount' => $this->amount,
+                'amount' => $formattedAmount,
                 'newBalance' => $this->newBalance,
                 'firstName' => $notifiable->name,
-                'header' => '💎 Credits Added!',
+                'header' => '💎 Credits Added Successfully!',
                 'ctaUrl' => route('frontend.credit-logs.index'),
                 'ctaText' => 'View Credit History',
                 'image' => asset('images/credits.jpg'),
-                'imageAlt' => 'PetPal Club Credits'
+                'imageAlt' => 'PetFriends Credits',
+                'purchaseDate' => $purchaseDate,
+                'message' => "Thank you for your purchase! Your account has been credited with {$this->credits} credits. Your new balance is {$this->newBalance} credits.",
+                'details' => [
+                    'Purchase Date' => $purchaseDate,
+                    'Credits Purchased' => $this->credits,
+                    'Amount Paid' => '$' . $formattedAmount,
+                    'New Balance' => $this->newBalance . ' credits'
+                ]
             ]);
     }
 

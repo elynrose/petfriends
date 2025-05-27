@@ -37,7 +37,7 @@
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
+                <a class="navbar-brand" href="{{ route('frontend.home') }}">
                     <img src="{{ asset('images/logo.png') }}" alt="Dolce" height="40">
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -49,24 +49,10 @@
                     <ul class="navbar-nav mr-auto">
                         @guest
                         @else
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('frontend.home') }}">
-                                    {{ __('Dashboard') }}
-                                </a>
-                            </li>
+                      
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('frontend.pets.index') }}">
                                     {{ __('My Pets') }}
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('frontend.credits.purchase') ? 'active' : '' }}" href="{{ route('frontend.credits.purchase') }}">
-                                    <i class="fas fa-coins"></i> Buy Credits
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('frontend.subscription.*') ? 'active' : '' }}" href="{{ route('frontend.subscription.index') }}">
-                                    <i class="fas fa-crown"></i> Premium
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -80,10 +66,26 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.credits.purchase') ? 'active' : '' }}" href="{{ route('frontend.credits.purchase') }}">
+                                    <i class="fas fa-coins"></i> Buy Credits
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('frontend.subscription.*') ? 'active' : '' }}" href="{{ route('frontend.subscription.index') }}">
+                                    <i class="fas fa-crown"></i> Premium
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('frontend.credit-logs.*') ? 'active' : '' }}" href="{{ route('frontend.credit-logs.index') }}">
                                     <i class="fas fa-history"></i> Credit History
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('frontend.referrals.index') }}">
+                                    <i class="fas fa-user-plus mr-2"></i> Refer Friends
+                                </a>
+                            </li>   
                         @endguest
                     </ul>
 
@@ -102,82 +104,40 @@
                         @else
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    {{ Auth::user()->name }} <span class="caret"></span>
-                                    <span class="badge badge-info ml-2">{{ Auth::user()->credits }} Credits</span>
+                                    @if(auth()->user()->profile_photo_path)
+                                        <img src="{{ auth()->user()->profile_photo_url }}" alt="{{ auth()->user()->name }}" class="rounded-circle mr-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                    @else
+                                        <i class="fas fa-user-circle mr-2"></i>
+                                    @endif
+                                    {{ Auth::user()->name }}
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-
-                                    <a class="dropdown-item" href="{{ route('frontend.profile.index') }}">{{ __('My profile') }}</a>
-
-                                    @can('user_management_access')
-                                        <a class="dropdown-item disabled" href="#">
-                                            {{ trans('cruds.userManagement.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('permission_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.permissions.index') }}">
-                                            {{ trans('cruds.permission.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('role_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.roles.index') }}">
-                                            {{ trans('cruds.role.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('user_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.users.index') }}">
-                                            {{ trans('cruds.user.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('support_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.supports.index') }}">
-                                            {{ trans('cruds.support.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('email_log_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.email-logs.index') }}">
-                                            {{ trans('cruds.emailLog.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('spam_ip_access')
-                                        <a class="dropdown-item ml-3" href="{{ route('frontend.spam-ips.index') }}">
-                                            {{ trans('cruds.spamIp.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('pet_access')
-                                        <a class="dropdown-item" href="{{ route('frontend.pets.index') }}">
-                                            {{ trans('cruds.pet.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('booking_access')
-                                        <a class="dropdown-item" href="{{ route('frontend.bookings.index') }}">
-                                            {{ trans('cruds.booking.title') }}
-                                        </a>
-                                    @endcan
-                                    @can('pet_review_access')
-                                        <a class="dropdown-item" href="{{ route('frontend.pet-reviews.index') }}">
-                                            {{ trans('cruds.petReview.title') }}
-                                        </a>
-                                    @endcan
+                                    <a class="dropdown-item" href="{{ route('frontend.members.show', auth()->user()) }}">
+                                        <i class="fas fa-user mr-2"></i> My Profile
+                                    </a>
+                                 
+                                    <a class="dropdown-item" href="{{ route('frontend.profile.index') }}">
+                                        <i class="fas fa-cog mr-2"></i> Settings
+                                    </a>
                                     @can('chat_access')
                                         <a class="dropdown-item" href="{{ route('frontend.chats.index') }}">
-                                            {{ trans('cruds.chat.title') }}
+                                            <i class="fas fa-comments mr-2"></i> {{ trans('cruds.chat.title') }}
                                         </a>
                                     @endcan
                                     @can('user_alert_access')
                                         <a class="dropdown-item" href="{{ route('frontend.user-alerts.index') }}">
-                                            {{ trans('cruds.userAlert.title') }}
+                                            <i class="fas fa-bell mr-2"></i> {{ trans('cruds.userAlert.title') }}
                                             @php($alertsCount = \Auth::user()->userUserAlerts()->where('read', false)->count())
                                             @if($alertsCount > 0)
                                                 <span class="badge badge-danger">{{ $alertsCount }}</span>
                                             @endif
                                         </a>
                                     @endcan
-
+                                    <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
                                                 document.getElementById('logout-form').submit();">
-                                        {{ __('Logout') }}
+                                        <i class="fas fa-sign-out-alt mr-2"></i> {{ __('Logout') }}
                                     </a>
 
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

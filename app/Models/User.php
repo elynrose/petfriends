@@ -365,4 +365,14 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         return $this->isPremium();
     }
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    public function getReferralLinkAttribute()
+    {
+        return route('register', ['ref' => $this->referral_token]);
+    }
 }

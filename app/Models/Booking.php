@@ -56,6 +56,7 @@ class Booking extends Model implements HasMedia
         'rejected'  => 'Rejected',
         'completed' => 'Completed',
         'new'       => 'New',
+        'expired'   => 'Expired',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -237,5 +238,55 @@ class Booking extends Model implements HasMedia
     {
         $creditService = app(CreditService::class);
         return $creditService->deductCreditsForBooking($this->user, $this);
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'pending')
+            ->where(function ($q) {
+                $q->where(function ($q) {
+                    $q->where('to', '<', now()->format('Y-m-d'))
+                        ->orWhere(function ($q) {
+                            $q->where('to', '=', now()->format('Y-m-d'))
+                                ->where('to_time', '<', now()->format('H:i:s'));
+                        });
+                });
+            });
+    }
+
+    public function getStatusColorAttribute()
+    {
+        if ($this->isExpired()) {
+            return 'secondary';
+        }
+        
+        return match($this->status) {
+            'pending' => 'warning',
+            'accepted' => 'success',
+            'rejected' => 'danger',
+            'completed' => 'info',
+            'new' => 'success',
+            'expired' => 'secondary',
+            default => 'secondary',
+        };
+    }
+
+    public function isExpired()
+    {
+        if ($this->status !== 'pending') {
+            return false;
+        }
+
+        $endDateTime = \Carbon\Carbon::parse($this->to . ' ' . $this->to_time);
+        return $endDateTime->isPast();
+    }
+
+    public function getStatusTextAttribute()
+    {
+        if ($this->isExpired()) {
+            return 'Expired';
+        }
+        
+        return App\Models\Booking::STATUS_SELECT[$this->status] ?? 'Unknown';
     }
 }

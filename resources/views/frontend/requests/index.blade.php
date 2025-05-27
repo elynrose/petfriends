@@ -89,6 +89,23 @@
                                             <div class="booking-content p-3">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            @if($booking->user->profile_photo_path)
+                                                                <img src="{{ $booking->user->profile_photo_url }}" alt="{{ $booking->user->name }}" class="rounded-circle mr-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                            @else
+                                                                <div class="rounded-circle bg-secondary mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                    <i class="fas fa-user text-white"></i>
+                                                                </div>
+                                                            @endif
+                                                            <div>
+                                                                <h5 class="mb-0">
+                                                                    <a href="{{ route('frontend.members.show', $booking->user) }}" class="text-dark">
+                                                                        {{ $booking->user->name }}
+                                                                    </a>
+                                                                </h5>
+                                                                <small class="text-muted">Requested by</small>
+                                                            </div>
+                                                        </div>
                                                         <h5 class="mb-2">
                                                             <a href="{{ route('frontend.pets.show', $booking->pet->id) }}" class="text-decoration-none">
                                                                 {{ $booking->pet->name ?? 'Unnamed Pet' }}

@@ -28,14 +28,19 @@ class DataChangeEmailNotification extends Notification
 
     public function getMessage()
     {
+        $action = ucfirst($this->data['action']);
+        $modelName = ucfirst($this->data['model_name']);
+        $timestamp = now()->format('F j, Y g:i A');
+
         return (new MailMessage)
-            ->subject(config('app.name') . ': entry ' . $this->data['action'] . ' in ' . $this->data['model_name'])
-            ->greeting('Hi,')
-            ->line('we would like to inform you that entry has been ' . $this->data['action'] . ' in ' . $this->data['model_name'])
-            ->line('Please log in to see more information.')
-            ->action(config('app.name'), config('app.url'))
-            ->line('Thank you')
-            ->line(config('app.name') . ' Team')
-            ->salutation(' ');
+            ->subject("PetFriends: {$modelName} {$action}")
+            ->greeting('Hello,')
+            ->line("A {$modelName} has been {$this->data['action']} in the system.")
+            ->line("Timestamp: {$timestamp}")
+            ->line('Please log in to review the changes and take any necessary actions.')
+            ->action('View ' . $modelName, config('app.url'))
+            ->line('This is an automated notification. Please do not reply to this email.')
+            ->line('If you have any questions, please contact the system administrator.')
+            ->salutation('Best regards, PetFriends Team');
     }
 }

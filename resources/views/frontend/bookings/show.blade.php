@@ -150,19 +150,12 @@
 
     @yield('scripts')
     <script>
-    console.log('Chat script loaded');
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Content Loaded');
         const chatContainer = document.querySelector('.chat-container');
-        console.log('Chat container:', chatContainer);
         const chatMessages = document.getElementById('chat-messages');
-        console.log('Chat messages element:', chatMessages);
         const chatForm = document.getElementById('chat-form');
-        console.log('Chat form:', chatForm);
         const messageInput = document.getElementById('message-input');
-        console.log('Message input:', messageInput);
         const bookingId = chatContainer.dataset.bookingId;
-        console.log('Booking ID:', bookingId);
         let isLoading = false;
 
         // Load messages
@@ -171,7 +164,6 @@
             isLoading = true;
             
             try {
-                console.log('Fetching messages for booking:', bookingId);
                 const response = await fetch(`/frontend/bookings/${bookingId}/messages`, {
                     headers: {
                         'Accept': 'application/json',
@@ -179,23 +171,18 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('Error response:', errorData);
                     throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
                 
                 const messages = await response.json();
-                console.log('Received messages:', messages);
                 
                 // Clear loading spinner
                 chatMessages.innerHTML = '';
                 
                 if (!Array.isArray(messages)) {
-                    console.error('Invalid response format:', messages);
                     throw new Error('Invalid response format: expected array of messages');
                 }
                 
@@ -206,7 +193,6 @@
                 }
                 scrollToBottom();
             } catch (error) {
-                console.error('Error loading messages:', error);
                 chatMessages.innerHTML = `
                     <div class="alert alert-danger m-3">
                         <i class="fas fa-exclamation-circle"></i> Error loading messages: ${error.message}<br>
@@ -220,7 +206,6 @@
 
         // Append message to chat
         function appendMessage(message) {
-            console.log('Appending message:', message);
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${message.from_id === {{ auth()->id() }} ? 'sent' : 'received'}`;
             messageDiv.innerHTML = `
@@ -239,90 +224,65 @@
         }
 
         // Send message
-        if (chatForm) {
-            chatForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const message = messageInput.value.trim();
-                if (!message) return;
-
-                const submitButton = chatForm.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-                try {
-                    console.log('Sending message:', message);
-                    const response = await fetch(`/frontend/bookings/${bookingId}/messages`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ message })
-                    });
-
-                    console.log('Send response status:', response.status);
-                    const data = await response.json();
-                    console.log('Send response data:', data);
-                    
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Failed to send message');
-                    }
-
-                    if (data.success) {
-                        messageInput.value = '';
-                        appendMessage(data.message);
-                        scrollToBottom();
-                    } else {
-                        throw new Error(data.error || 'Failed to send message');
-                    }
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    alert('Failed to send message: ' + error.message);
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                }
-            });
-        }
-
-        // Listen for new messages
-        console.log('Setting up Echo listener for booking:', bookingId);
-        Echo.private(`booking.${bookingId}`)
-            .listen('NewChatMessage', (e) => {
-                console.log('Received new message event:', e);
-                const existingMessage = document.querySelector(`[data-message-id="${e.id}"]`);
-                if (!existingMessage) {
-                    appendMessage(e);
-                    scrollToBottom();
-                    markMessagesAsRead();
-                }
-            });
-
-        // Mark messages as read
-        async function markMessagesAsRead() {
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
             try {
-                console.log('Marking messages as read');
-                const response = await fetch(`/frontend/bookings/${bookingId}/messages/read`, {
+                const response = await fetch(`/frontend/bookings/${bookingId}/messages`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ message })
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to mark messages as read');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    messageInput.value = '';
+                    appendMessage(data.message);
+                    scrollToBottom();
                 }
             } catch (error) {
-                console.error('Error marking messages as read:', error);
+                alert('Error sending message: ' + error.message);
             }
-        }
+        });
 
-        // Initial load
+        // Load initial messages
         loadMessages();
+
+        // Listen for new messages
+        Echo.private(`booking.${bookingId}`)
+            .listen('NewChatMessage', (e) => {
+                appendMessage(e.message);
+                scrollToBottom();
+            });
+
+        // Mark messages as read when window is focused
+        window.addEventListener('focus', async function() {
+            try {
+                await fetch(`/frontend/bookings/${bookingId}/mark-read`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+            } catch (error) {
+                // Silently fail - marking as read is not critical
+            }
+        });
     });
     </script>
    

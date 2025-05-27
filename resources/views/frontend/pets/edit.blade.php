@@ -133,65 +133,63 @@
                                                     <input class="form-control" type="time" name="from_time" id="from_time" value="{{ old('from_time', $pet->from_time ? date('H:i', strtotime($pet->from_time)) : '') }}">
                                                 </div>
                                             </div>
-                                            @if($errors->has('from'))
-                                                <div class="invalid-feedback">
-                                                    {{ $errors->first('from') }}
-                                                </div>
-                                            @endif
-                                            @if($errors->has('from_time'))
-                                                <div class="invalid-feedback">
-                                                    {{ $errors->first('from_time') }}
-                                                </div>
-                                            @endif
+                                    @if($errors->has('from'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('from') }}
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="required" for="to">Available To</label>
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <input class="form-control date" type="text" name="to" id="to" value="{{ old('to', $pet->to ? date('Y-m-d', strtotime($pet->to)) : '') }}">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <input class="form-control" type="time" name="to_time" id="to_time" value="{{ old('to_time', $pet->to_time ? date('H:i', strtotime($pet->to_time)) : '') }}">
-                                                </div>
-                                            </div>
-                                            @if($errors->has('to'))
-                                                <div class="invalid-feedback">
-                                                    {{ $errors->first('to') }}
-                                                </div>
-                                            @endif
-                                            @if($errors->has('to_time'))
-                                                <div class="invalid-feedback">
-                                                    {{ $errors->first('to_time') }}
-                                                </div>
-                                            @endif
+                                    @endif
+                                    @if($errors->has('from_time'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('from_time') }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="required" for="to">Available To</label>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <input class="form-control date" type="text" name="to" id="to" value="{{ old('to', $pet->to ? date('Y-m-d', strtotime($pet->to)) : '') }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" type="time" name="to_time" id="to_time" value="{{ old('to_time', $pet->to_time ? date('H:i', strtotime($pet->to_time)) : '') }}">
                                         </div>
                                     </div>
+                                    @if($errors->has('to'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('to') }}
+                                        </div>
+                                    @endif
+                                    @if($errors->has('to_time'))
+                                        <div class="invalid-feedback">
+                                            {{ $errors->first('to_time') }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-
-                        @if($pet->canBeFeatured())
-                            <div class="form-group">
-                                <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="feature_pet" name="feature_pet" value="1">
-                                    <label class="custom-control-label" for="feature_pet">Feature my pet for 1 hour</label>
-                                </div>
-                                <small class="form-text text-muted">Premium feature: Your pet will be shown in the featured section on the home page for 1 hour.</small>
-                            </div>
-                        @elseif($pet->isFeatured())
-                            <div class="alert alert-info">
-                                <i class="fas fa-star"></i> This pet is currently featured until {{ $pet->featured_until->format('g:i A') }}
-                            </div>
-                        @endif
-
-                        <div class="form-group">
-                            <button class="btn btn-primary" type="submit">
-                                {{ trans('global.save') }}
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                @if($pet->canBeFeatured())
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="feature_pet" name="feature_pet" value="1">
+                            <label class="custom-control-label" for="feature_pet">Feature my pet for 1 hour</label>
+                        </div>
+                        <small class="form-text text-muted">Premium feature: Your pet will be shown in the featured section on the home page for 1 hour.</small>
+                    </div>
+                @elseif($pet->isFeatured())
+                    <div class="alert alert-info">
+                        <i class="fas fa-star"></i> This pet is currently featured until {{ $pet->featured_until->format('g:i A') }}
+                    </div>
+                @endif
+
+                <div class="form-group">
+                    <button class="btn btn-primary" type="submit">
+                        {{ trans('global.save') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -304,24 +302,13 @@
 
         // Form validation before submit
         $('form').submit(function(e) {
-            console.log('Form validation started');
-            console.log('not_available checked:', $('#not_available').is(':checked'));
-            
             if (!$('#not_available').is(':checked')) {
                 var from = $('#from').val();
                 var to = $('#to').val();
                 var fromTime = $('#from_time').val();
                 var toTime = $('#to_time').val();
 
-                console.log('Availability values:', {
-                    from: from,
-                    to: to,
-                    fromTime: fromTime,
-                    toTime: toTime
-                });
-
                 if (!from || !to || !fromTime || !toTime) {
-                    console.log('Validation failed: Missing required fields');
                     e.preventDefault();
                     alert('Please fill in all availability dates and times when the pet is available.');
                     return false;
@@ -330,20 +317,13 @@
                 var fromDate = new Date(from + ' ' + fromTime);
                 var toDate = new Date(to + ' ' + toTime);
 
-                console.log('Date objects:', {
-                    fromDate: fromDate,
-                    toDate: toDate
-                });
-
                 if (fromDate >= toDate) {
-                    console.log('Validation failed: End date before start date');
                     e.preventDefault();
                     alert('End date and time must be after start date and time.');
                     return false;
                 }
 
                 if (fromDate < new Date()) {
-                    console.log('Validation failed: Start date in past');
                     e.preventDefault();
                     alert('Start date and time must be in the future.');
                     return false;
@@ -351,32 +331,12 @@
 
                 // Check if duration is within limits (24 hours)
                 var durationHours = (toDate - fromDate) / (1000 * 60 * 60);
-                console.log('Duration in hours:', durationHours);
-                
                 if (durationHours > 24) {
-                    console.log('Validation failed: Duration > 24 hours');
                     e.preventDefault();
                     alert('Availability period cannot exceed 24 hours.');
                     return false;
                 }
-
-                // Check if time is within business hours (9 AM to 5 PM)
-                var fromHour = fromDate.getHours();
-                var toHour = toDate.getHours();
-                console.log('Hours:', {
-                    fromHour: fromHour,
-                    toHour: toHour
-                });
-                
-                if (fromHour < 9 || toHour > 17) {
-                    console.log('Validation failed: Outside business hours');
-                    e.preventDefault();
-                    alert('Availability must be between 9 AM and 5 PM.');
-                    return false;
-                }
             }
-            
-            console.log('Form validation passed, proceeding with submission');
         });
     });
 </script>

@@ -13,8 +13,7 @@
                         @endif
             </div>
             <div class="col-lg-6">
-                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                     alt="Happy pets" class="img-fluid rounded-lg shadow-lg">
+                <img src="{{ asset('images/banner.png') }}"  alt="Happy pets" class="img-fluid rounded-lg shadow-lg">
             </div>
         </div>
     </div>

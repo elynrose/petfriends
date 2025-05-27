@@ -11,7 +11,23 @@
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">{{ $pet->name }}</h4>
+                    <div class="d-flex align-items-center">
+                        @if($pet->user->profile_photo_path)
+                            <img src="{{ $pet->user->profile_photo_url }}" alt="{{ $pet->user->name }}" class="rounded-circle mr-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        @else
+                            <div class="rounded-circle bg-secondary mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        @endif
+                        <div>
+                            <h4 class="mb-0">
+                                <a href="{{ route('frontend.members.show', $pet->user) }}" class="text-dark">
+                                    {{ $pet->user->name }}
+                                </a>
+                            </h4>
+                            <small class="text-muted">Pet Owner</small>
+                        </div>
+                    </div>
                     @if($pendingRequestsCount > 0)
                         <div class="position-relative">
                             <span class="badge badge-danger notification-badge">{{ $pendingRequestsCount }}</span>

@@ -23,86 +23,123 @@ class ChatController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('chat_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $chats = Chat::with(['booking', 'from', 'media'])->get();
+        $chats = Chat::with(['booking', 'booking.pet', 'booking.user'])
+            ->whereHas('booking', function($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->orWhereHas('booking', function($query) {
+                $query->where('pet_id', function($subquery) {
+                    $subquery->select('pet_id')
+                        ->from('bookings')
+                        ->whereColumn('bookings.id', 'chats.booking_id')
+                        ->where('user_id', Auth::id());
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('frontend.chats.index', compact('chats'));
     }
 
     public function create()
     {
-        abort_if(Gate::denies('chat_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $bookings = Booking::with(['pet', 'user'])
+            ->where('user_id', Auth::id())
+            ->orWhereHas('pet', function($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->get();
 
-        $bookings = Booking::pluck('status', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $froms = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        return view('frontend.chats.create', compact('bookings', 'froms'));
+        return view('frontend.chats.create', compact('bookings'));
     }
 
-    public function store(StoreChatRequest $request)
+    public function store(Request $request)
     {
-        $chat = Chat::create($request->all());
+        $request->validate([
+            'booking_id' => 'required|exists:bookings,id',
+            'message' => 'required|string',
+            'photo' => 'nullable|array',
+            'photo.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
 
-        if ($request->input('photo', false)) {
-            $chat->addMedia(storage_path('tmp/uploads/' . basename($request->input('photo'))))->toMediaCollection('photo');
+        $booking = Booking::findOrFail($request->booking_id);
+        
+        if ($booking->user_id !== Auth::id() && $booking->pet->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You are not authorized to chat in this booking.');
         }
 
-        if ($media = $request->input('ck-media', false)) {
-            Media::whereIn('id', $media)->update(['model_id' => $chat->id]);
-        }
+        $chat = new Chat();
+        $chat->booking_id = $request->booking_id;
+        $chat->message = $request->message;
+        $chat->from_id = Auth::id();
+        $chat->to_id = $booking->user_id === Auth::id() ? $booking->pet->user_id : $booking->user_id;
+        $chat->save();
 
-        return redirect()->route('frontend.chats.index');
-    }
-
-    public function edit(Chat $chat)
-    {
-        abort_if(Gate::denies('chat_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $bookings = Booking::pluck('status', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $froms = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $chat->load('booking', 'from');
-
-        return view('frontend.chats.edit', compact('bookings', 'chat', 'froms'));
-    }
-
-    public function update(UpdateChatRequest $request, Chat $chat)
-    {
-        $chat->update($request->all());
-
-        if ($request->input('photo', false)) {
-            if (! $chat->photo || $request->input('photo') !== $chat->photo->file_name) {
-                if ($chat->photo) {
-                    $chat->photo->delete();
-                }
-                $chat->addMedia(storage_path('tmp/uploads/' . basename($request->input('photo'))))->toMediaCollection('photo');
+        if ($request->hasFile('photo')) {
+            foreach ($request->file('photo') as $file) {
+                $chat->addMedia($file)->toMediaCollection('photo');
             }
-        } elseif ($chat->photo) {
-            $chat->photo->delete();
         }
 
-        return redirect()->route('frontend.chats.index');
+        broadcast(new NewChatMessage($chat))->toOthers();
+
+        return redirect()->route('frontend.chats.show', $chat->id);
     }
 
     public function show(Chat $chat)
     {
-        abort_if(Gate::denies('chat_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if ($chat->booking->user_id !== Auth::id() && $chat->booking->pet->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You are not authorized to view this chat.');
+        }
 
-        $chat->load('booking', 'from');
+        $chat->load(['booking', 'booking.pet', 'booking.user', 'media']);
 
         return view('frontend.chats.show', compact('chat'));
     }
 
+    public function edit(Chat $chat)
+    {
+        if ($chat->from_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You can only edit your own messages.');
+        }
+
+        return view('frontend.chats.edit', compact('chat'));
+    }
+
+    public function update(Request $request, Chat $chat)
+    {
+        if ($chat->from_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You can only edit your own messages.');
+        }
+
+        $request->validate([
+            'message' => 'required|string',
+            'photo' => 'nullable|array',
+            'photo.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $chat->message = $request->message;
+        $chat->save();
+
+        if ($request->hasFile('photo')) {
+            $chat->clearMediaCollection('photo');
+            foreach ($request->file('photo') as $file) {
+                $chat->addMedia($file)->toMediaCollection('photo');
+            }
+        }
+
+        return redirect()->route('frontend.chats.show', $chat->id);
+    }
+
     public function destroy(Chat $chat)
     {
-        abort_if(Gate::denies('chat_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if ($chat->from_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You can only delete your own messages.');
+        }
 
         $chat->delete();
 
-        return back();
+        return redirect()->route('frontend.chats.index');
     }
 
     public function massDestroy(MassDestroyChatRequest $request)
@@ -130,212 +167,51 @@ class ChatController extends Controller
 
     public function getMessages(Booking $booking)
     {
-        \Log::info('=== START: Get Messages ===');
-        \Log::info('Fetching messages for booking', [
-            'booking_id' => $booking->id,
-            'user_id' => Auth::id(),
-            'booking_user_id' => $booking->user_id,
-            'pet_user_id' => $booking->pet->user_id
-        ]);
-
-        try {
-            // Check if user is authorized to view these messages
-            if (Auth::id() !== $booking->user_id && Auth::id() !== $booking->pet->user_id) {
-                \Log::warning('Unauthorized access attempt to messages', [
-                    'booking_id' => $booking->id,
-                    'user_id' => Auth::id()
-                ]);
-                return response()->json(['error' => 'Unauthorized access'], 403);
-            }
-
-            // Check if user has premium access
-            if (!Auth::user()->canUseChat()) {
-                \Log::warning('Non-premium user attempting to access chat', [
-                    'booking_id' => $booking->id,
-                    'user_id' => Auth::id()
-                ]);
-                return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
-            }
-
-            $messages = Chat::with(['from' => function($query) {
-                    $query->with('media');
-                }])
-                ->where('booking_id', $booking->id)
-                ->orderBy('created_at', 'asc')
-                ->get()
-                ->map(function ($message) {
-                    $userPhoto = $message->from->getFirstMediaUrl('photo', 'thumb');
-                    return [
-                        'id' => $message->id,
-                        'message' => $message->message,
-                        'from_id' => $message->from_id,
-                        'from_name' => $message->from->name,
-                        'from_photo' => $userPhoto,
-                        'created_at' => $message->created_at->format('Y-m-d H:i:s')
-                    ];
-                });
-
-            \Log::info('Messages fetched successfully', [
-                'booking_id' => $booking->id,
-                'message_count' => $messages->count(),
-                'first_message' => $messages->first(),
-                'last_message' => $messages->last()
-            ]);
-
-            return response()->json($messages);
-        } catch (\Exception $e) {
-            \Log::error('Error fetching messages', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'booking_id' => $booking->id,
-                'user_id' => Auth::id()
-            ]);
-            return response()->json(['error' => 'Failed to fetch messages: ' . $e->getMessage()], 500);
-        } finally {
-            \Log::info('=== END: Get Messages ===');
+        if ($booking->user_id !== Auth::id() && $booking->pet->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
+
+        $messages = $booking->chats()
+            ->with(['from', 'media'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json($messages);
     }
 
     public function sendMessage(Request $request, Booking $booking)
     {
-        \Log::info('=== START: Chat Message Process ===');
-        \Log::info('Received message request', [
-            'booking_id' => $booking->id,
-            'user_id' => Auth::id(),
-            'request_data' => $request->all(),
-            'auth_check' => Auth::check(),
-            'user' => Auth::user()->toArray()
+        if ($booking->user_id !== Auth::id() && $booking->pet->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'message' => 'required|string'
         ]);
 
-        // Check if user is authorized to send messages
-        if (Auth::id() !== $booking->user_id && Auth::id() !== $booking->pet->user_id) {
-            \Log::warning('Unauthorized message attempt', [
-                'booking_id' => $booking->id,
-                'user_id' => Auth::id(),
-                'booking_user_id' => $booking->user_id,
-                'pet_user_id' => $booking->pet->user_id
-            ]);
-            abort(403);
-        }
+        $chat = new Chat();
+        $chat->booking_id = $booking->id;
+        $chat->message = $request->message;
+        $chat->from_id = Auth::id();
+        $chat->to_id = $booking->user_id === Auth::id() ? $booking->pet->user_id : $booking->user_id;
+        $chat->save();
 
-        // Check if user has premium access
-        if (!Auth::user()->canUseChat()) {
-            \Log::warning('Non-premium user attempting to send message', [
-                'booking_id' => $booking->id,
-                'user_id' => Auth::id()
-            ]);
-            return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
-        }
+        broadcast(new NewChatMessage($chat))->toOthers();
 
-        try {
-            $request->validate([
-                'message' => 'required|string|max:1000',
-            ]);
-
-            \Log::info('Validation passed, preparing to save message', [
-                'booking_id' => $booking->id,
-                'from_id' => Auth::id(),
-                'message' => $request->message,
-                'auth_check' => Auth::check(),
-                'user' => Auth::user()->toArray(),
-                'request_data' => $request->all()
-            ]);
-
-            // Check if booking exists
-            if (!$booking) {
-                \Log::error('Booking not found', ['booking_id' => $booking->id]);
-                return response()->json(['error' => 'Booking not found'], 404);
-            }
-
-            // Check if user is authenticated
-            if (!Auth::check()) {
-                \Log::error('User not authenticated');
-                return response()->json(['error' => 'User not authenticated'], 401);
-            }
-
-            // Create the chat message
-            $chat = new Chat();
-            $chat->booking_id = $booking->id;
-            $chat->from_id = Auth::id();
-            $chat->message = $request->message;
-            $chat->read = false;
-            $chat->save();
-
-            \Log::info('Chat message saved successfully', [
-                'chat_id' => $chat->id,
-                'message' => $chat->message,
-                'created_at' => $chat->created_at,
-                'booking_id' => $chat->booking_id,
-                'from_id' => $chat->from_id,
-                'saved_data' => $chat->toArray()
-            ]);
-
-            // Load the user relationship for the broadcast
-            $chat->load(['from' => function($query) {
-                $query->with('media');
-            }]);
-
-            \Log::info('Broadcasting message', [
-                'chat_id' => $chat->id,
-                'channel' => 'booking.' . $booking->id
-            ]);
-
-            // Get the user's photo URL
-            $userPhoto = $chat->from->getFirstMediaUrl('photo', 'thumb');
-
-            // Broadcast the new message to all users
-            broadcast(new NewChatMessage($chat));
-
-            \Log::info('Message broadcast completed');
-
-            return response()->json([
-                'success' => true,
-                'message' => [
-                    'id' => $chat->id,
-                    'message' => $chat->message,
-                    'from_id' => $chat->from_id,
-                    'from_name' => $chat->from->name,
-                    'from_photo' => $userPhoto,
-                    'created_at' => $chat->created_at->format('Y-m-d H:i:s')
-                ]
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error in chat message process', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'booking_id' => $booking->id,
-                'user_id' => Auth::id(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ]);
-            return response()->json([
-                'error' => 'Failed to save message',
-                'debug_info' => [
-                    'error_message' => $e->getMessage(),
-                    'error_time' => now()->toDateTimeString(),
-                    'error_line' => $e->getLine(),
-                    'error_file' => $e->getFile()
-                ]
-            ], 500);
-        } finally {
-            \Log::info('=== END: Chat Message Process ===');
-        }
+        return response()->json([
+            'success' => true,
+            'message' => $chat->load('from')
+        ]);
     }
 
-    public function markAsRead(Booking $booking)
+    public function markMessagesAsRead(Booking $booking)
     {
-        // Check if user is authorized to mark messages as read
-        if (Auth::id() !== $booking->user_id && Auth::id() !== $booking->pet->user_id) {
-            abort(403);
+        if ($booking->user_id !== Auth::id() && $booking->pet->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // Check if user has premium access
-        if (!Auth::user()->canUseChat()) {
-            return response()->json(['error' => 'Chat is a premium feature. Please upgrade to access.'], 403);
-        }
-
-        Chat::where('booking_id', $booking->id)
-            ->where('from_id', '!=', Auth::id())
+        $booking->chats()
+            ->where('to_id', Auth::id())
             ->where('read', false)
             ->update(['read' => true]);
 

@@ -25,44 +25,8 @@
 </style>
 <div class="container">
     <div class="row">
+    <div class="row mb-5">
         <div class="col-md-12">
-            <h2 class="mb-4">Featured Pets</h2>
-            @if($featuredPets->isEmpty())
-                <div class="alert alert-info">
-                    No featured pets at the moment.
-                </div>
-            @else
-                <div class="row">
-                    @foreach($featuredPets as $pet)
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                @if($pet->photo && $pet->photo->first())
-                                    <img src="{{ $pet->photo->first()->getUrl() }}" class="card-img-top" alt="{{ $pet->name }}">
-                                @endif
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        {{ $pet->name }}
-                                        
-                                    </h5>
-                                    <p class="card-text">
-                                        <strong>Type:</strong> {{ $pet->type }}<br>
-                                        <strong>Age:</strong> {{ $pet->age }} years<br>
-                                        <strong>Gender:</strong> {{ $pet->gender }}<br>
-                                        <strong>Featured Until:</strong> {{ $pet->featured_until->format('g:i A') }}
-                                    </p>
-                                    <a href="{{ route('frontend.pets.show', $pet->id) }}" class="btn btn-primary">View Details</a>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="col-md-12">
-            <h2 class="mb-4">Available Pets</h2>
             <div class="row justify-content-center">
                 <div class="col-md-12">
                     <!-- Search Form -->
@@ -106,15 +70,8 @@
                         </div>
                     </div>
 
-                    @can('pet_create')
-                        <div style="margin-bottom: 20px;" class="row">
-                            <div class="col-lg-12">
-                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createPetModal">
-                                    {{ trans('global.add') }} {{ trans('cruds.pet.title_singular') }}
-                                </button>
-                            </div>
-                        </div>
-                    @endcan
+                    <h2 class="mb-4">Available Pets</h2>
+
 
                     <div class="row">
                         @if($pets->count() > 0)
@@ -213,6 +170,42 @@
             </div>
         </div>
     </div>
+        <div class="col-md-12">
+            <h2 class="mb-4">Featured Pets</h2>
+            @if($featuredPets->isEmpty())
+                <div class="alert alert-info">
+                    No featured pets at the moment.
+                </div>
+            @else
+                <div class="row">
+                    @foreach($featuredPets as $pet)
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                @if($pet->photo && $pet->photo->first())
+                                    <img src="{{ $pet->photo->first()->getUrl() }}" class="card-img-top" alt="{{ $pet->name }}">
+                                @endif
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {{ $pet->name }}
+                                        
+                                    </h5>
+                                    <p class="card-text">
+                                        <strong>Type:</strong> {{ $pet->type }}<br>
+                                        <strong>Age:</strong> {{ $pet->age }} years<br>
+                                        <strong>Gender:</strong> {{ $pet->gender }}<br>
+                                        <strong>Featured Until:</strong> {{ $pet->featured_until->format('g:i A') }}
+                                    </p>
+                                    <a href="{{ route('frontend.pets.show', $pet->id) }}" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
+  
 </div>
 
 <!-- Create Pet Modal -->

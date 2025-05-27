@@ -94,6 +94,13 @@ Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 
 Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['auth', '2fa']], function () {
     Route::get('/home', 'HomeController@index')->name('home');
 
+    // Members routes
+    Route::get('members/{user}', 'MemberController@show')->name('members.show');
+
+    // Referral routes
+    Route::get('referrals', 'ReferralController@index')->name('referrals.index');
+    Route::post('referrals/invite', 'ReferralController@invite')->name('referrals.invite');
+
     // Permissions
     Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');
     Route::resource('permissions', 'PermissionsController');

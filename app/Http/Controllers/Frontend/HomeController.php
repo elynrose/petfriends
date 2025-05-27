@@ -20,7 +20,7 @@ class HomeController
         if ($user) {
             $userLocation = $user->location;
             
-            // Get featured pets with detailed debugging
+            // Get featured pets
             $featuredQuery = Pet::with(['user', 'photo'])
                 ->where('featured_until', '>', now())
                 ->where('not_available', false)
@@ -30,29 +30,7 @@ class HomeController
                 })
                 ->take(4);
 
-            \Log::info('Featured Pets Query SQL:', [
-                'sql' => $featuredQuery->toSql(),
-                'bindings' => $featuredQuery->getBindings(),
-                'now' => now()->toDateTimeString()
-            ]);
-
             $featuredPets = $featuredQuery->get();
-
-            \Log::info('Featured Pets Results:', [
-                'count' => $featuredPets->count(),
-                'pets' => $featuredPets->map(function($pet) {
-                    return [
-                        'id' => $pet->id,
-                        'name' => $pet->name,
-                        'featured_until' => $pet->featured_until,
-                        'not_available' => $pet->not_available,
-                        'user_id' => $pet->user_id,
-                        'current_user_id' => Auth::id(),
-                        'time_diff' => now()->diffInMinutes($pet->featured_until),
-                        'from' => $pet->from
-                    ];
-                })
-            ]);
 
             // Get available pets
             $query = Pet::with(['user', 'photo'])

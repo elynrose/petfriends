@@ -91,8 +91,34 @@
                                             <div class="booking-content p-3">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
-                                                       
-                                                    
+                                                        <div class="booking-card mb-3">
+                                                            <div class="card">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                                                        <div class="d-flex align-items-center">
+                                                                            @if($booking->pet->user->profile_photo_path)
+                                                                            <a href="{{ route('frontend.members.show', $booking->pet->user) }}" class="text-dark">
+                                                                            <img src="{{ $booking->pet->user->profile_photo_url }}" alt="{{ $booking->pet->user->name }}" class="rounded-circle mr-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                                            </a>
+                                                                            @else
+                                                                                <div class="rounded-circle bg-secondary mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                                    <i class="fas fa-user text-white"></i>
+                                                                                </div>
+                                                                            @endif
+                                                                            <div>
+                                                                                <h5 class="mb-0">
+                                                                                    <a href="{{ route('frontend.members.show', $booking->pet->user) }}" class="text-dark">
+                                                                                        {{ $booking->pet->user->name }}
+                                                                                    </a>
+                                                                                </h5>
+                                                                                <small class="text-muted">Pet Owner</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <span class="badge badge-{{ $booking->status_color }}">{{ ucfirst($booking->status) }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="btn-group">
                                                         @if($booking->status === 'pending')
