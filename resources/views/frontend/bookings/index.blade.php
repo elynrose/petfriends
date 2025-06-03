@@ -71,55 +71,33 @@
                             @foreach($bookings as $booking)
                                 <div class="booking-item mb-4" data-status="{{ $booking->status }}">
                                     <div class="row no-gutters">
-                                        <div class="col-md-3">
-                                            @if($booking->pet && $booking->pet->photo && $booking->pet->photo->isNotEmpty())
+                                        <div class="col-md-3">  
                                             <h3 class="mb-3 mt-3">
                                                                 {{ $booking->pet->name ?? 'Unnamed Pet' }}
                                                         </h3>
+                                            @if($booking->pet && $booking->pet->photo && $booking->pet->photo->isNotEmpty())
+                                          
+                                                <div style="position: relative;">
                                                         <a href="{{ route('frontend.pets.show', $booking->pet->id) }}" class="text-decoration-none">
                                                         <img src="{{ $booking->pet->photo->first()->getUrl() }}" 
                                                      class="booking-image" 
                                                      alt="{{ $booking->pet->name ?? 'Pet' }}"
                                                      onerror="this.onerror=null; this.src='{{ asset('images/pet-placeholder.jpg') }}';"></a>
+                                                     @if($booking->pet->user->photo)
+                                                          <img src="{{ $booking->pet->user->photo->getUrl() }}" class="img-fluid rounded-circle" style="width: 50px; height: 50px; position: absolute; bottom: -25px; right: 10px;">
+                                                     @endif
+                                                </div>
                                             @else
                                                 <div class="booking-image-placeholder">
                                                     <i class="fas fa-paw fa-3x text-muted"></i>
                                                 </div>
                                             @endif
+                                            
                                         </div>
                                         <div class="col-md-9">
                                             <div class="booking-content p-3">
                                                 <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <div class="booking-card mb-3">
-                                                            <div class="card">
-                                                                <div class="card-body">
-                                                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                                                        <div class="d-flex align-items-center">
-                                                                            @if($booking->pet->user->profile_photo_path)
-                                                                            <a href="{{ route('frontend.members.show', $booking->pet->user) }}" class="text-dark">
-                                                                            <img src="{{ $booking->pet->user->profile_photo_url }}" alt="{{ $booking->pet->user->name }}" class="rounded-circle mr-3" style="width: 40px; height: 40px; object-fit: cover;">
-                                                                            </a>
-                                                                            @else
-                                                                                <div class="rounded-circle bg-secondary mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                                                    <i class="fas fa-user text-white"></i>
-                                                                                </div>
-                                                                            @endif
-                                                                            <div>
-                                                                                <h5 class="mb-0">
-                                                                                    <a href="{{ route('frontend.members.show', $booking->pet->user) }}" class="text-dark">
-                                                                                        {{ $booking->pet->user->name }}
-                                                                                    </a>
-                                                                                </h5>
-                                                                                <small class="text-muted">Pet Owner</small>
-                                                                            </div>
-                                                                        </div>
-                                                                        <span class="badge badge-{{ $booking->status_color }}">{{ ucfirst($booking->status) }}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                  
                                                     <div class="btn-group">
                                                         @if($booking->status === 'pending')
                                             @can('booking_delete')
@@ -157,6 +135,9 @@
                                                     <div class="row">
                                                         <div class="col-md-6 col-sm-6">
                                                             <h6 class="text-muted mb-3">Booking Information</h6>
+                                                            <div class="small text-muted mb-2">
+                                                                <i class="fas fa-user"></i> Owned by: {{ $booking->pet->user->name ?? 'Unknown' }}
+                                                            </div>
                                                             <div class="small text-muted mb-2">
                                                                 <i class="fas fa-user"></i> Booked by: {{ $booking->user->name ?? 'Unknown' }}
                                                             </div>

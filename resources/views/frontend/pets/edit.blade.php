@@ -314,26 +314,40 @@
                     return false;
                 }
 
-                var fromDate = new Date(from + ' ' + fromTime);
-                var toDate = new Date(to + ' ' + toTime);
+                // Parse dates and times properly with timezone consideration
+                var fromDate = moment.tz(from + 'T' + fromTime, moment.tz.guess());
+                var toDate = moment.tz(to + 'T' + toTime, moment.tz.guess());
+                var now = moment().tz(moment.tz.guess());
 
-                if (fromDate >= toDate) {
+                // Add a small buffer (1 minute) to prevent edge cases
+                var bufferTime = moment().tz(moment.tz.guess()).add(1, 'minute');
+
+                if (fromDate.isSameOrBefore(toDate)) {
                     e.preventDefault();
                     alert('End date and time must be after start date and time.');
                     return false;
                 }
 
-                if (fromDate < new Date()) {
+                if (fromDate.isBefore(bufferTime)) {
                     e.preventDefault();
                     alert('Start date and time must be in the future.');
                     return false;
                 }
 
                 // Check if duration is within limits (24 hours)
-                var durationHours = (toDate - fromDate) / (1000 * 60 * 60);
+                var durationHours = toDate.diff(fromDate, 'hours', true);
                 if (durationHours > 24) {
                     e.preventDefault();
                     alert('Availability period cannot exceed 24 hours.');
+                    return false;
+                }
+
+                // Validate business hours (6 AM to 10 PM)
+                var startHour = fromDate.hour();
+                var endHour = toDate.hour();
+                if (startHour < 6 || startHour >= 22 || endHour < 6 || endHour >= 22) {
+                    e.preventDefault();
+                    alert('Bookings are only allowed between 6 AM and 10 PM.');
                     return false;
                 }
             }

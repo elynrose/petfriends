@@ -122,7 +122,7 @@ class PetsController extends Controller
             $newHours = ceil($end->diffInMinutes($start) / 60);
             
             // Calculate old hours if pet was previously available
-            $oldHours = null;
+            $oldHours = 0; // Default to 0 instead of null
             if (!$pet->not_available && $pet->from && $pet->to && $pet->from_time && $pet->to_time) {
                 $oldStart = Carbon::parse($pet->from . ' ' . $pet->from_time);
                 $oldEnd = Carbon::parse($pet->to . ' ' . $pet->to_time);

@@ -25,6 +25,11 @@ class Referral extends Model
         return $this->belongsTo(User::class, 'referrer_id');
     }
 
+    public function referred()
+    {
+        return $this->belongsTo(User::class, 'referred_id');
+    }
+
     public function getReferralLinkAttribute()
     {
         return route('register', ['ref' => $this->token]);
