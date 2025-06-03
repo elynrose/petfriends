@@ -33,7 +33,7 @@ class PetsController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             if (empty($user->state) || empty($user->city) || empty($user->zip_code)) {
-                return redirect()->route('frontend.profile.edit')
+                return redirect()->route('frontend.profile.index')
                     ->with('warning', 'Please complete your location information (State, City, and Zip Code) before adding a pet.');
             }
         }

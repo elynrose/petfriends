@@ -14,7 +14,7 @@
                         </div>
                     @endif
                     <h3 class="card-title">{{ $user->name }}</h3>
-                    <p class="text-muted">Member since {{ $user->created_at->format('F Y') }}</p>
+                    <p class="text-muted">Member since {{ $user->created_at ? $user->created_at->format('F Y') : 'N/A' }}</p>
                     <div class="d-flex justify-content-center mb-3">
                         <div class="text-center mx-3">
                             <h4>{{ $totalHours }}</h4>

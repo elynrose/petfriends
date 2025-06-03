@@ -13,10 +13,13 @@ class MemberController extends Controller
     public function show(User $user)
     {
         // Get total hours of care provided
-        $totalHours = $user->bookings()
+        $totalHours = $user->caregiverBookings()
             ->where('status', 'completed')
             ->get()
             ->sum(function ($booking) {
+                if (!$booking->from || !$booking->from_time || !$booking->to || !$booking->to_time) {
+                    return 0;
+                }
                 $from = \Carbon\Carbon::parse($booking->from . ' ' . $booking->from_time);
                 $to = \Carbon\Carbon::parse($booking->to . ' ' . $booking->to_time);
                 return $from->diffInHours($to);
@@ -28,9 +31,8 @@ class MemberController extends Controller
             ->get();
 
         // Get reviews received
-        $reviews = Review::where('reviewer_id', $user->id)
-            ->orWhere('reviewed_id', $user->id)
-            ->with(['reviewer', 'reviewed'])
+        $reviews = Review::where('user_id', $user->id)
+            ->with(['user', 'booking'])
             ->latest()
             ->get();
 

@@ -348,6 +348,16 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(Pet::class);
     }
 
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function caregiverBookings()
+    {
+        return $this->hasMany(Booking::class, 'user_id');
+    }
+
     public function hasEnoughCredits(int $credits)
     {
         return $this->credits >= $credits;
