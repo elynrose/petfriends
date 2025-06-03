@@ -50,7 +50,9 @@ class ChatController extends Controller
             })
             ->get();
 
-        return view('frontend.chats.create', compact('bookings'));
+        $froms = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        return view('frontend.chats.create', compact('bookings', 'froms'));
     }
 
     public function store(Request $request)

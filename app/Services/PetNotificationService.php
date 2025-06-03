@@ -12,7 +12,7 @@ class PetNotificationService
     {
         // Get all users who have completed bookings for this pet
         $previousCaretakers = $pet->bookings()
-            ->where('completed', true)
+            ->where('status', 'completed')
             ->where('user_id', '!=', $pet->user_id)
             ->with('user.notificationPreferences')
             ->get()
