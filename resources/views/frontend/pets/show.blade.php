@@ -156,7 +156,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Hours and Credits Summary -->
+                                    <!-- Hours and Credits Summary
                                     <div class="mb-4">
                                         <h5 class="card-title">Usage Statistics</h5>
                                         <div class="row">
@@ -164,7 +164,19 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Hours</h6>
-                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('hours') ?? 0 }}</h3>
+                                                        <h3 class="display-4">
+                                                            @php
+                                                                $totalHours = 0;
+                                                                foreach($pet->bookings->where('completed', true) as $booking) {
+                                                                    if ($booking->from && $booking->from_time && $booking->to && $booking->to_time) {
+                                                                        $start = \Carbon\Carbon::parse($booking->from . ' ' . $booking->from_time);
+                                                                        $end = \Carbon\Carbon::parse($booking->to . ' ' . $booking->to_time);
+                                                                        $totalHours += ceil($end->diffInMinutes($start) / 60);
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            {{ $totalHours }}
+                                                        </h3>
                                                         <p class="text-muted small">Completed Bookings</p>
                                                     </div>
                                                 </div>
@@ -173,13 +185,25 @@
                                                 <div class="card bg-light mb-3">
                                                     <div class="card-body text-center">
                                                         <h6 class="card-title">Total Credits</h6>
-                                                        <h3 class="display-4">{{ $pet->bookings->where('completed', true)->sum('credits') ?? 0 }}</h3>
+                                                        <h3 class="display-4">
+                                                            @php
+                                                                $totalCredits = 0;
+                                                                foreach($pet->bookings->where('completed', true) as $booking) {
+                                                                    if ($booking->from && $booking->from_time && $booking->to && $booking->to_time) {
+                                                                        $start = \Carbon\Carbon::parse($booking->from . ' ' . $booking->from_time);
+                                                                        $end = \Carbon\Carbon::parse($booking->to . ' ' . $booking->to_time);
+                                                                        $totalCredits += ceil($end->diffInMinutes($start) / 60);
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            {{ $totalCredits }}
+                                                        </h3>
                                                         <p class="text-muted small">Used Credits</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> -->
 
                                     @if($pet->notes)
                                         <div class="mb-4">
@@ -238,7 +262,7 @@
                         </div>
                     </div>
 
-                    <!-- Recent Bookings -->
+                    <!-- Recent Bookings 
                     <div class="card mt-4">
                         <div class="card-header">
                             <h5 class="mb-0">Recent Bookings</h5>
@@ -279,7 +303,7 @@
                         </table>
                             </div>
                         </div>
-                    </div>
+                   --> </div>
                 </div>
                 <div class="card-footer">
                     @if(auth()->user()->canUseChat())

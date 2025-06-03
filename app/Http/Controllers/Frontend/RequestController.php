@@ -19,7 +19,7 @@ class RequestController extends Controller
                 $query->where('user_id', Auth::id());
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // Show 10 bookings per page
 
         return view('frontend.requests.index', compact('bookings'));
     }
@@ -51,29 +51,6 @@ class RequestController extends Controller
 
             // For accepted bookings, perform additional checks
             if ($validated['status'] === 'accepted') {
-                // Get credit service instance
-                $creditService = app(CreditService::class);
-                
-                // Calculate required credits using the service
-                $hours = $creditService->calculateBookingHours($booking);
-                $requiredCredits = $hours;
-
-                // Debug logging
-                \Log::info('Booking time calculation', [
-                    'booking_id' => $booking->id,
-                    'from_date' => $booking->from,
-                    'from_time' => $booking->from_time,
-                    'to_date' => $booking->to,
-                    'to_time' => $booking->to_time,
-                    'hours' => $hours
-                ]);
-
-                // Check if pet owner has enough credits
-                if (Auth::user()->credits < $requiredCredits) {
-                    return redirect()->route('frontend.requests.index')
-                        ->with('error', "You do not have enough credits to award for this booking. Required: {$requiredCredits} credits ({$hours} hours), Available: " . Auth::user()->credits . ' credits');
-                }
-
                 // Check if the requested time slot is still available
                 if ($this->isTimeSlotBooked($booking)) {
                     return redirect()->route('frontend.requests.index')

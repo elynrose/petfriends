@@ -67,7 +67,12 @@ class Pet extends Model implements HasMedia
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class, 'pet_id');
+        return $this->hasMany(Booking::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(PetNotification::class);
     }
 
     public function petReviews()
@@ -142,5 +147,17 @@ class Pet extends Model implements HasMedia
 
         $this->featured_until = now()->addHour();
         return $this->save();
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updated(function ($pet) {
+            // Check if the pet just became available
+            if ($pet->wasChanged('not_available') && !$pet->not_available) {
+                app(PetNotificationService::class)->notifyPreviousCaretakers($pet);
+            }
+        });
     }
 }

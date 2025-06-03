@@ -126,6 +126,8 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         'phone',
         'sms_notifications',
         'credits',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
@@ -133,6 +135,8 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         'password' => 'hashed',
         'sms_notifications' => 'boolean',
         'credits' => 'integer',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -195,6 +199,18 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         parent::boot();
         self::observe(new \App\Observers\UserActionObserver);
+
+        static::saving(function ($user) {
+            if ($user->isDirty('zip_code')) {
+                $geocodingService = app(GeocodingService::class);
+                $coordinates = $geocodingService->getCoordinatesFromZipCode($user->zip_code);
+                
+                if ($coordinates) {
+                    $user->latitude = $coordinates['lat'];
+                    $user->longitude = $coordinates['lng'];
+                }
+            }
+        });
     }
 
     public function registerMediaCollections(): void
@@ -374,5 +390,22 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getReferralLinkAttribute()
     {
         return route('register', ['ref' => $this->referral_token]);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(PetNotification::class);
+    }
+
+    public function notificationPreferences()
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    public function getNotificationPreferences()
+    {
+        return $this->notificationPreferences ?? $this->notificationPreferences()->create(
+            NotificationPreference::getDefaults()
+        );
     }
 }

@@ -32,39 +32,53 @@
                     <!-- Search Form -->
                     <div class="card mb-4">
                         <div class="card-body">
-                            <form method="GET" action="{{ route('frontend.home') }}" class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="type">{{ trans('cruds.pet.fields.type') }}</label>
-                                        <select class="form-control" name="type" id="type">
-                                            <option value="">{{ trans('global.pleaseSelect') }}</option>
-                                            @foreach($petTypes as $key => $label)
-                                                <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
+                            <form method="GET" action="{{ route('frontend.home') }}">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="type">{{ trans('cruds.pet.fields.type') }}</label>
+                                            <select class="form-control" name="type" id="type">
+                                                <option value="">{{ trans('global.pleaseSelect') }}</option>
+                                                @foreach($petTypes as $key => $label)
+                                                    <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="zip_code" class="font-weight-bold">Zip Code</label>
-                                        <input type="text" class="form-control" name="zip_code" id="zip_code" value="{{ request('zip_code') }}" placeholder="Enter zip code">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="zip_code" class="font-weight-bold">Zip Code</label>
+                                            <input type="text" class="form-control" name="zip_code" id="zip_code" value="{{ request('zip_code', auth()->user()->zip_code ?? '') }}" placeholder="Enter zip code">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="date_from" class="font-weight-bold">From Date</label>
-                                        <input type="text" class="form-control date" name="date_from" id="date_from" value="{{ request('date_from') }}">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="radius" class="font-weight-bold">Search Radius</label>
+                                            <select class="form-control" name="radius" id="radius">
+                                                <option value="5" {{ request('radius') == '5' ? 'selected' : '' }}>5 miles</option>
+                                                <option value="10" {{ request('radius') == '10' ? 'selected' : '' }}>10 miles</option>
+                                                <option value="25" {{ request('radius') == '25' ? 'selected' : '' }}>25 miles</option>
+                                                <option value="50" {{ request('radius') == '50' ? 'selected' : '' }}>50 miles</option>
+                                                <option value="100" {{ request('radius') == '100' ? 'selected' : '' }}>100 miles</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="date_to" class="font-weight-bold">To Date</label>
-                                        <input type="text" class="form-control date" name="date_to" id="date_to" value="{{ request('date_to') }}">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_from" class="font-weight-bold">From Date</label>
+                                            <input type="text" class="form-control date" name="date_from" id="date_from" value="{{ request('date_from') }}">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-12 text-right">
-                                    <button type="submit" class="btn btn-primary">Search</button>
-                                    <a href="{{ route('frontend.home') }}" class="btn btn-secondary">Reset</a>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="date_to" class="font-weight-bold">To Date</label>
+                                            <input type="text" class="form-control date" name="date_to" id="date_to" value="{{ request('date_to') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 text-right">
+                                        <button type="submit" class="btn btn-primary">Search</button>
+                                        <a href="{{ route('frontend.home') }}" class="btn btn-secondary">Reset</a>
+                                    </div>
                                 </div>
                             </form>
                         </div>

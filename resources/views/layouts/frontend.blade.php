@@ -37,8 +37,8 @@
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="{{ route('frontend.home') }}">
-                    <img src="{{ asset('images/logo.png') }}" alt="Dolce" height="40">
+                <a class="navbar-brand mx-5" href="{{ route('frontend.home') }}">
+                   <i class="fas fa-star"></i> {{ __('Dolce') }}
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
@@ -49,41 +49,42 @@
                     <ul class="navbar-nav mr-auto">
                         @guest
                         @else
-                      
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('frontend.pets.index') }}">
-                                    {{ __('My Pets') }}
+                            <li class="nav-item dropdown mx-2">
+                                <a class="nav-link dropdown-toggle" href="#" id="petsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-paw"></i> {{ __('Pets') }}
                                 </a>
+                                <div class="dropdown-menu" aria-labelledby="petsDropdown">
+                                    <a class="dropdown-item" href="{{ route('frontend.pets.index') }}">
+                                        <i class="fas fa-paw"></i> {{ __('My Pets') }}
+                                    </a>
+                                    <a class="dropdown-item {{ request()->routeIs('frontend.bookings.') ? 'active' : '' }}" href="{{ route('frontend.bookings.index') }}">
+                                        <i class="fas fa-calendar-alt"></i> {{ __('Bookings') }}
+                                    </a>
+                                    <a class="dropdown-item {{ request()->routeIs('frontend.requests.*') ? 'active' : '' }}" href="{{ route('frontend.requests.index') }}">
+                                        <i class="fas fa-inbox"></i> {{ __('Requests') }}
+                                    </a>
+                                </div>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('frontend.bookings.') ? 'active' : '' }}" href="{{ route('frontend.bookings.index') }}">
-                                    <i class="fas fa-calendar-alt"></i> My Bookings
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('frontend.requests.*') ? 'active' : '' }}" href="{{ route('frontend.requests.index') }}">
-                                    <i class="fas fa-inbox"></i> Booking Requests
-                                </a>
-                            </li>
-                            <li class="nav-item">
+                            <li class="nav-item mx-2">
                                 <a class="nav-link {{ request()->routeIs('frontend.credits.purchase') ? 'active' : '' }}" href="{{ route('frontend.credits.purchase') }}">
-                                    <i class="fas fa-coins"></i> Buy Credits
+                                    <i class="fas fa-coins"></i> {{ auth()->user()->credits }} {{ __('Credits') }}
                                 </a>
                             </li>
-                            <li class="nav-item">
+                     
+                            <li class="nav-item mx-2">
                                 <a class="nav-link {{ request()->routeIs('frontend.subscription.*') ? 'active' : '' }}" href="{{ route('frontend.subscription.index') }}">
-                                    <i class="fas fa-crown"></i> Premium
+                                    <i class="fas fa-crown"></i> {{ __('Premium') }}
                                 </a>
                             </li>
 
-                            <li class="nav-item">
+                            <li class="nav-item mx-2">
                                 <a class="nav-link {{ request()->routeIs('frontend.credit-logs.*') ? 'active' : '' }}" href="{{ route('frontend.credit-logs.index') }}">
-                                    <i class="fas fa-history"></i> Credit History
+                                    <i class="fas fa-history"></i> {{ __('Transactions') }}
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item mx-2">
                                 <a class="nav-link" href="{{ route('frontend.referrals.index') }}">
-                                    <i class="fas fa-user-plus mr-2"></i> Refer Friends
+                                    <i class="fas fa-user-plus mr-2"></i> {{ __('Invite') }}
                                 </a>
                             </li>   
                         @endguest
@@ -93,11 +94,11 @@
                     <ul class="navbar-nav ml-auto">
                         <!-- Authentication Links -->
                         @guest
-                            <li class="nav-item">
+                            <li class="nav-item mx-2">
                                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
                             </li>
                             @if(Route::has('register'))
-                                <li class="nav-item">
+                                <li class="nav-item mx-2">
                                     <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                                 </li>
                             @endif

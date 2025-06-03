@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Models\Pet;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class HomeController
 {
@@ -32,8 +34,8 @@ class HomeController
 
             $featuredPets = $featuredQuery->get();
 
-            // Get available pets
-            $query = Pet::with(['user', 'photo'])
+            // Base query for available pets
+            $baseQuery = Pet::with(['user', 'photo'])
                 ->where('not_available', false)
                 ->where('user_id', '!=', $user->id)
                 ->where(function($q) {
@@ -41,19 +43,71 @@ class HomeController
                       ->orWhere('from', '>=', now()->startOfDay());
                 });
 
+            // Apply type filter if provided
             if ($request->has('type') && $request->type !== '') {
-                $query->where('type', $request->type);
+                $baseQuery->where('type', $request->type);
             }
 
+            // Apply gender filter if provided
             if ($request->has('gender') && $request->gender !== '') {
-                $query->where('gender', $request->gender);
+                $baseQuery->where('gender', $request->gender);
             }
 
+            // Apply age filter if provided
             if ($request->has('age') && $request->age !== '') {
-                $query->where('age', '<=', $request->age);
+                $baseQuery->where('age', '<=', $request->age);
             }
 
-            $pets = $query->get();
+            // Get the search zip code (from request or user's zip code)
+            $searchZipCode = $request->input('zip_code', $user->zip_code);
+            $searchRadius = $request->input('radius');
+
+            if ($searchZipCode) {
+                // Function to get users within a specific radius
+                $getUsersInRadius = function($radius) use ($searchZipCode) {
+                    return User::select('id')
+                        ->whereRaw("
+                            ST_Distance_Sphere(
+                                point(longitude, latitude),
+                                point(
+                                    (SELECT longitude FROM users WHERE zip_code = ?),
+                                    (SELECT latitude FROM users WHERE zip_code = ?)
+                                )
+                            ) <= ? * 1609.34
+                        ", [$searchZipCode, $searchZipCode, $radius])
+                        ->pluck('id');
+                };
+
+                // If radius is specified in request, use that
+                if ($searchRadius) {
+                    $usersInRadius = $getUsersInRadius($searchRadius);
+                    $query = clone $baseQuery;
+                    $query->whereIn('user_id', $usersInRadius);
+                    $pets = $query->get();
+                } else {
+                    // Try 10 miles first
+                    $usersInRadius = $getUsersInRadius(10);
+                    $query = clone $baseQuery;
+                    $query->whereIn('user_id', $usersInRadius);
+                    $pets = $query->get();
+
+                    // If no pets found, try 20 miles
+                    if ($pets->isEmpty()) {
+                        $usersInRadius = $getUsersInRadius(20);
+                        $query = clone $baseQuery;
+                        $query->whereIn('user_id', $usersInRadius);
+                        $pets = $query->get();
+
+                        // If still no pets found, show all available pets
+                        if ($pets->isEmpty()) {
+                            $pets = $baseQuery->get();
+                        }
+                    }
+                }
+            } else {
+                // If no zip code available, show all pets
+                $pets = $baseQuery->get();
+            }
         }
 
         return view('frontend.home', compact('pets', 'featuredPets', 'userLocation', 'petTypes'));

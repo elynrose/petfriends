@@ -18,11 +18,24 @@
                     <x-nav-link :href="route('frontend.credits.purchase')" :active="request()->routeIs('frontend.credits.purchase')">
                         {{ __('Buy Credits') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('frontend.pets.index')" :active="request()->routeIs('frontend.pets.index')">
-                        {{ __('My Pets') }}
+                    <x-nav-link :href="route('frontend.pets.index')" :active="request()->routeIs('frontend.pets.*')">
+                        {{ __('Pets') }}
                     </x-nav-link>
                     <x-nav-link :href="route('frontend.bookings.index')" :active="request()->routeIs('frontend.bookings.index')">
                         {{ __('Bookings') }}
+                    </x-nav-link>
+
+                    @php
+                        $unreadNotifications = auth()->user()->notifications()
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
+                    
+                    <x-nav-link :href="route('frontend.notifications.index')" :active="request()->routeIs('frontend.notifications.*')">
+                        <i class="fas fa-bell"></i>
+                        @if($unreadNotifications > 0)
+                            <span class="badge badge-danger">{{ $unreadNotifications }}</span>
+                        @endif
                     </x-nav-link>
                 </div>
             </div>
@@ -83,8 +96,8 @@
             <x-responsive-nav-link :href="route('frontend.credits.purchase')" :active="request()->routeIs('frontend.credits.purchase')">
                 {{ __('Buy Credits') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('frontend.pets.index')" :active="request()->routeIs('frontend.pets.index')">
-                {{ __('My Pets') }}
+            <x-responsive-nav-link :href="route('frontend.pets.index')" :active="request()->routeIs('frontend.pets.*')">
+                {{ __('Pets') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('frontend.bookings.index')" :active="request()->routeIs('frontend.bookings.index')">
                 {{ __('Bookings') }}

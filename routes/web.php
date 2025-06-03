@@ -5,6 +5,7 @@ use App\Http\Controllers\Frontend\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Frontend\CreditPurchaseController;
+use App\Http\Controllers\Frontend\NotificationController;
 
 Route::view('/', 'welcome');
 Route::get('userVerification/{token}', 'UserVerificationController@approve')->name('userVerification');
@@ -204,4 +205,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/frontend/bookings/{booking}/messages', [App\Http\Controllers\Frontend\ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/frontend/bookings/{booking}/messages', [App\Http\Controllers\Frontend\ChatController::class, 'sendMessage'])->name('chat.send');
     Route::post('/frontend/bookings/{booking}/messages/read', [App\Http\Controllers\Frontend\ChatController::class, 'markAsRead'])->name('chat.read');
+});
+
+// Notification routes
+Route::group(['prefix' => 'notifications', 'as' => 'notifications.', 'middleware' => ['auth']], function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::post('/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
 });

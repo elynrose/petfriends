@@ -28,14 +28,14 @@ class BookingController extends Controller
         abort_if(Gate::denies('booking_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $bookings = Booking::with(['pet', 'user', 'media'])
-        ->where('user_id', auth()->id())
-        ->orderBy('status', 'asc')
-        ->get();
+            ->where('user_id', auth()->id())
+            ->orderBy('status', 'asc')
+            ->paginate(10); // Show 10 bookings per page
 
         //Pending bookings count
         $pendingBookingsCount = Booking::where('user_id', auth()->id())
-        ->where('status', 'pending')
-        ->count();
+            ->where('status', 'pending')
+            ->count();
 
         return view('frontend.bookings.index', compact('bookings', 'pendingBookingsCount'));
     }
