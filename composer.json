@@ -16,6 +16,7 @@
         "nuovo/spreadsheet-reader": "^0.5.11",
         "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-medialibrary": "^10.7",
+        "spatie/laravel-permission": "^6.19",
         "stripe/stripe-php": "^17.2",
         "twilio/sdk": "^8.6",
         "yajra/laravel-datatables-oracle": "^10.3"
