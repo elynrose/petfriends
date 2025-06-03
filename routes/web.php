@@ -95,6 +95,14 @@ Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 
 Route::group(['prefix' => 'frontend', 'as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['auth', '2fa']], function () {
     Route::get('/home', 'HomeController@index')->name('home');
 
+    // Profile routes
+    Route::get('profile', 'ProfileController@index')->name('profile.index');
+    Route::get('profile/edit', 'ProfileController@edit')->name('profile.edit');
+    Route::post('profile', 'ProfileController@update')->name('profile.update');
+    Route::post('profile/destroy', 'ProfileController@destroy')->name('profile.destroy');
+    Route::post('profile/password', 'ProfileController@password')->name('profile.password');
+    Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
+
     // Members routes
     Route::get('members/{user}', 'MemberController@show')->name('members.show');
 
@@ -170,13 +178,6 @@ Route::group(['prefix' => 'frontend', 'as' => 'frontend.', 'namespace' => 'Front
     // Spam Ip
     Route::delete('spam-ips/destroy', 'SpamIpController@massDestroy')->name('spam-ips.massDestroy');
     Route::resource('spam-ips', 'SpamIpController');
-
-    Route::get('profile', 'ProfileController@index')->name('profile.index');
-    Route::get('profile/edit', 'ProfileController@edit')->name('profile.edit');
-    Route::post('profile', 'ProfileController@update')->name('profile.update');
-    Route::post('profile/destroy', 'ProfileController@destroy')->name('profile.destroy');
-    Route::post('profile/password', 'ProfileController@password')->name('profile.password');
-    Route::post('profile/toggle-two-factor', 'ProfileController@toggleTwoFactor')->name('profile.toggle-two-factor');
 
     Route::get('credit-logs', [App\Http\Controllers\Frontend\CreditLogController::class, 'index'])->name('credit-logs.index');
 
