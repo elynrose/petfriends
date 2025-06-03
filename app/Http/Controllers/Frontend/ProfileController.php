@@ -26,15 +26,6 @@ class ProfileController extends Controller
         return view('frontend.profile', compact('user'));
     }
 
-    /**
-     * Show the form for editing the user's profile.
-     */
-    public function edit()
-    {
-        $user = Auth::user();
-        return view('frontend.profile', compact('user'));
-    }
-
      /**
      * Handle media updates for the pet
      *

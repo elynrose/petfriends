@@ -17,11 +17,10 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
-    use HasApiTokens, SoftDeletes, Notifiable, HasFactory, InteractsWithMedia, HasRoles;
+    use HasApiTokens, SoftDeletes, Notifiable, HasFactory, InteractsWithMedia;
 
     public $table = 'users';
 
@@ -408,13 +407,5 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->notificationPreferences ?? $this->notificationPreferences()->create(
             NotificationPreference::getDefaults()
         );
-    }
-
-    /**
-     * Get all bookings for the user
-     */
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class);
     }
 }

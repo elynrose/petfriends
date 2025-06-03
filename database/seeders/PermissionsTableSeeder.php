@@ -10,62 +10,230 @@ class PermissionsTableSeeder extends Seeder
     public function run()
     {
         $permissions = [
-            [ 'id' => 1,  'name' => 'user_management_access', 'guard_name' => 'web'],
-            [ 'id' => 2,  'name' => 'permission_create', 'guard_name' => 'web'],
-            [ 'id' => 3,  'name' => 'permission_edit', 'guard_name' => 'web'],
-            [ 'id' => 4,  'name' => 'permission_show', 'guard_name' => 'web'],
-            [ 'id' => 5,  'name' => 'permission_delete', 'guard_name' => 'web'],
-            [ 'id' => 6,  'name' => 'permission_access', 'guard_name' => 'web'],
-            [ 'id' => 7,  'name' => 'role_create', 'guard_name' => 'web'],
-            [ 'id' => 8,  'name' => 'role_edit', 'guard_name' => 'web'],
-            [ 'id' => 9,  'name' => 'role_show', 'guard_name' => 'web'],
-            [ 'id' => 10, 'name' => 'role_delete', 'guard_name' => 'web'],
-            [ 'id' => 11, 'name' => 'role_access', 'guard_name' => 'web'],
-            [ 'id' => 12, 'name' => 'user_create', 'guard_name' => 'web'],
-            [ 'id' => 13, 'name' => 'user_edit', 'guard_name' => 'web'],
-            [ 'id' => 14, 'name' => 'user_show', 'guard_name' => 'web'],
-            [ 'id' => 15, 'name' => 'user_delete', 'guard_name' => 'web'],
-            [ 'id' => 16, 'name' => 'user_access', 'guard_name' => 'web'],
-            [ 'id' => 17, 'name' => 'pet_create', 'guard_name' => 'web'],
-            [ 'id' => 18, 'name' => 'pet_edit', 'guard_name' => 'web'],
-            [ 'id' => 19, 'name' => 'pet_show', 'guard_name' => 'web'],
-            [ 'id' => 20, 'name' => 'pet_delete', 'guard_name' => 'web'],
-            [ 'id' => 21, 'name' => 'pet_access', 'guard_name' => 'web'],
-            [ 'id' => 22, 'name' => 'booking_create', 'guard_name' => 'web'],
-            [ 'id' => 23, 'name' => 'booking_edit', 'guard_name' => 'web'],
-            [ 'id' => 24, 'name' => 'booking_show', 'guard_name' => 'web'],
-            [ 'id' => 25, 'name' => 'booking_delete', 'guard_name' => 'web'],
-            [ 'id' => 26, 'name' => 'booking_access', 'guard_name' => 'web'],
-            [ 'id' => 27, 'name' => 'pet_review_create', 'guard_name' => 'web'],
-            [ 'id' => 28, 'name' => 'pet_review_edit', 'guard_name' => 'web'],
-            [ 'id' => 29, 'name' => 'pet_review_show', 'guard_name' => 'web'],
-            [ 'id' => 30, 'name' => 'pet_review_delete', 'guard_name' => 'web'],
-            [ 'id' => 31, 'name' => 'pet_review_access', 'guard_name' => 'web'],
-            [ 'id' => 32, 'name' => 'chat_create', 'guard_name' => 'web'],
-            [ 'id' => 33, 'name' => 'chat_edit', 'guard_name' => 'web'],
-            [ 'id' => 34, 'name' => 'chat_show', 'guard_name' => 'web'],
-            [ 'id' => 35, 'name' => 'chat_delete', 'guard_name' => 'web'],
-            [ 'id' => 36, 'name' => 'chat_access', 'guard_name' => 'web'],
-            [ 'id' => 37, 'name' => 'user_alert_create', 'guard_name' => 'web'],
-            [ 'id' => 38, 'name' => 'user_alert_show', 'guard_name' => 'web'],
-            [ 'id' => 39, 'name' => 'user_alert_delete', 'guard_name' => 'web'],
-            [ 'id' => 40, 'name' => 'user_alert_access', 'guard_name' => 'web'],
-            [ 'id' => 41, 'name' => 'support_create', 'guard_name' => 'web'],
-            [ 'id' => 42, 'name' => 'support_edit', 'guard_name' => 'web'],
-            [ 'id' => 43, 'name' => 'support_show', 'guard_name' => 'web'],
-            [ 'id' => 44, 'name' => 'support_delete', 'guard_name' => 'web'],
-            [ 'id' => 45, 'name' => 'support_access', 'guard_name' => 'web'],
-            [ 'id' => 46, 'name' => 'email_log_create', 'guard_name' => 'web'],
-            [ 'id' => 47, 'name' => 'email_log_edit', 'guard_name' => 'web'],
-            [ 'id' => 48, 'name' => 'email_log_show', 'guard_name' => 'web'],
-            [ 'id' => 49, 'name' => 'email_log_delete', 'guard_name' => 'web'],
-            [ 'id' => 50, 'name' => 'email_log_access', 'guard_name' => 'web'],
-            [ 'id' => 51, 'name' => 'spam_ip_create', 'guard_name' => 'web'],
-            [ 'id' => 52, 'name' => 'spam_ip_edit', 'guard_name' => 'web'],
-            [ 'id' => 53, 'name' => 'spam_ip_show', 'guard_name' => 'web'],
-            [ 'id' => 54, 'name' => 'spam_ip_delete', 'guard_name' => 'web'],
-            [ 'id' => 55, 'name' => 'spam_ip_access', 'guard_name' => 'web'],
-            [ 'id' => 56, 'name' => 'profile_password_edit', 'guard_name' => 'web'],
+            [
+                'id'    => 1,
+                'title' => 'user_management_access',
+            ],
+            [
+                'id'    => 2,
+                'title' => 'permission_create',
+            ],
+            [
+                'id'    => 3,
+                'title' => 'permission_edit',
+            ],
+            [
+                'id'    => 4,
+                'title' => 'permission_show',
+            ],
+            [
+                'id'    => 5,
+                'title' => 'permission_delete',
+            ],
+            [
+                'id'    => 6,
+                'title' => 'permission_access',
+            ],
+            [
+                'id'    => 7,
+                'title' => 'role_create',
+            ],
+            [
+                'id'    => 8,
+                'title' => 'role_edit',
+            ],
+            [
+                'id'    => 9,
+                'title' => 'role_show',
+            ],
+            [
+                'id'    => 10,
+                'title' => 'role_delete',
+            ],
+            [
+                'id'    => 11,
+                'title' => 'role_access',
+            ],
+            [
+                'id'    => 12,
+                'title' => 'user_create',
+            ],
+            [
+                'id'    => 13,
+                'title' => 'user_edit',
+            ],
+            [
+                'id'    => 14,
+                'title' => 'user_show',
+            ],
+            [
+                'id'    => 15,
+                'title' => 'user_delete',
+            ],
+            [
+                'id'    => 16,
+                'title' => 'user_access',
+            ],
+            [
+                'id'    => 17,
+                'title' => 'pet_create',
+            ],
+            [
+                'id'    => 18,
+                'title' => 'pet_edit',
+            ],
+            [
+                'id'    => 19,
+                'title' => 'pet_show',
+            ],
+            [
+                'id'    => 20,
+                'title' => 'pet_delete',
+            ],
+            [
+                'id'    => 21,
+                'title' => 'pet_access',
+            ],
+            [
+                'id'    => 22,
+                'title' => 'booking_create',
+            ],
+            [
+                'id'    => 23,
+                'title' => 'booking_edit',
+            ],
+            [
+                'id'    => 24,
+                'title' => 'booking_show',
+            ],
+            [
+                'id'    => 25,
+                'title' => 'booking_delete',
+            ],
+            [
+                'id'    => 26,
+                'title' => 'booking_access',
+            ],
+            [
+                'id'    => 27,
+                'title' => 'pet_review_create',
+            ],
+            [
+                'id'    => 28,
+                'title' => 'pet_review_edit',
+            ],
+            [
+                'id'    => 29,
+                'title' => 'pet_review_show',
+            ],
+            [
+                'id'    => 30,
+                'title' => 'pet_review_delete',
+            ],
+            [
+                'id'    => 31,
+                'title' => 'pet_review_access',
+            ],
+            [
+                'id'    => 32,
+                'title' => 'chat_create',
+            ],
+            [
+                'id'    => 33,
+                'title' => 'chat_edit',
+            ],
+            [
+                'id'    => 34,
+                'title' => 'chat_show',
+            ],
+            [
+                'id'    => 35,
+                'title' => 'chat_delete',
+            ],
+            [
+                'id'    => 36,
+                'title' => 'chat_access',
+            ],
+            [
+                'id'    => 37,
+                'title' => 'user_alert_create',
+            ],
+            [
+                'id'    => 38,
+                'title' => 'user_alert_show',
+            ],
+            [
+                'id'    => 39,
+                'title' => 'user_alert_delete',
+            ],
+            [
+                'id'    => 40,
+                'title' => 'user_alert_access',
+            ],
+            [
+                'id'    => 41,
+                'title' => 'support_create',
+            ],
+            [
+                'id'    => 42,
+                'title' => 'support_edit',
+            ],
+            [
+                'id'    => 43,
+                'title' => 'support_show',
+            ],
+            [
+                'id'    => 44,
+                'title' => 'support_delete',
+            ],
+            [
+                'id'    => 45,
+                'title' => 'support_access',
+            ],
+            [
+                'id'    => 46,
+                'title' => 'email_log_create',
+            ],
+            [
+                'id'    => 47,
+                'title' => 'email_log_edit',
+            ],
+            [
+                'id'    => 48,
+                'title' => 'email_log_show',
+            ],
+            [
+                'id'    => 49,
+                'title' => 'email_log_delete',
+            ],
+            [
+                'id'    => 50,
+                'title' => 'email_log_access',
+            ],
+            [
+                'id'    => 51,
+                'title' => 'spam_ip_create',
+            ],
+            [
+                'id'    => 52,
+                'title' => 'spam_ip_edit',
+            ],
+            [
+                'id'    => 53,
+                'title' => 'spam_ip_show',
+            ],
+            [
+                'id'    => 54,
+                'title' => 'spam_ip_delete',
+            ],
+            [
+                'id'    => 55,
+                'title' => 'spam_ip_access',
+            ],
+            [
+                'id'    => 56,
+                'title' => 'profile_password_edit',
+            ],
         ];
 
         Permission::insert($permissions);
