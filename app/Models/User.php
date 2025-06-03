@@ -202,12 +202,16 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
         static::saving(function ($user) {
             if ($user->isDirty('zip_code')) {
-                $geocodingService = app(GeocodingService::class);
-                $coordinates = $geocodingService->getCoordinatesFromZipCode($user->zip_code);
-                
-                if ($coordinates) {
-                    $user->latitude = $coordinates['lat'];
-                    $user->longitude = $coordinates['lng'];
+                try {
+                    $geocodingService = app(GeocodingService::class);
+                    $coordinates = $geocodingService->getCoordinatesFromZipCode($user->zip_code);
+                    
+                    if ($coordinates) {
+                        $user->latitude = $coordinates['lat'];
+                        $user->longitude = $coordinates['lng'];
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error getting coordinates: ' . $e->getMessage());
                 }
             }
         });

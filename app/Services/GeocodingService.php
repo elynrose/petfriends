@@ -37,7 +37,10 @@ class GeocodingService
                     // Cache the result for 30 days
                     Cache::put($cacheKey, $location, now()->addDays(30));
                     
-                    return $location;
+                    return [
+                        'lat' => $location['lat'],
+                        'lng' => $location['lng']
+                    ];
                 }
             }
         } catch (\Exception $e) {
