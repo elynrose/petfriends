@@ -1,0 +1,23 @@
+#php artisan bookings:send-sms-reminders
+#php artisan queue:work
+#php artisan bookings:send-email-reminders
+#php artisan bookings:complete-past
+#php artisan reviews:send-reminders
+#npm run dev
+
+#php artisan schedule:run
+#* * * * * cd /Applications/XAMPP/xamppfiles/htdocs/petfriends && php artisan schedule:run >> /dev/null 2>&1
+#This cron job will run every minute and execute Laravel's scheduler, which in turn will run our bookings:mark-expired command hourly as configured in app/Console/Kernel.php.
+#To set up the cron job:
+#Open your terminal
+#Run crontab -e to edit your crontab
+#Add the line above
+#Save and exit
+#The cron job will:
+#Run every minute (* * * * *)
+#Change to your project directory (cd /Applications/XAMPP/xamppfiles/htdocs/petfriends)
+#Run Laravel's scheduler (php artisan schedule:run)
+#Redirect output to /dev/null to prevent log files from growing too large
+#Laravel's scheduler will then handle running the bookings:mark-expired command at the specified interval (hourly in our case).
+
+#./start-services.sh
