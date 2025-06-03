@@ -10,18 +10,20 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('referral_token')->unique()->nullable()->after('email');
-        });
+        if (!Schema::hasColumn('users', 'referral_token')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('referral_token')->unique()->nullable()->after('email');
+            });
 
-        // Generate unique referral tokens for existing users
-        User::whereNull('referral_token')->each(function ($user) {
-            do {
-                $token = Str::random(8); // Using 8 characters for shorter, more user-friendly tokens
-            } while (User::where('referral_token', $token)->exists());
-            
-            $user->update(['referral_token' => $token]);
-        });
+            // Generate unique referral tokens for existing users
+            User::whereNull('referral_token')->each(function ($user) {
+                do {
+                    $token = Str::random(8); // Using 8 characters for shorter, more user-friendly tokens
+                } while (User::where('referral_token', $token)->exists());
+                
+                $user->update(['referral_token' => $token]);
+            });
+        }
     }
 
     public function down()
