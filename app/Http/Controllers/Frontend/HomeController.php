@@ -65,16 +65,22 @@ class HomeController
             if ($searchZipCode) {
                 // Function to get users within a specific radius
                 $getUsersInRadius = function($radius) use ($searchZipCode) {
+                    // First get the reference point
+                    $referencePoint = User::select('longitude', 'latitude')
+                        ->where('zip_code', $searchZipCode)
+                        ->first();
+
+                    if (!$referencePoint) {
+                        return collect();
+                    }
+
                     return User::select('id')
                         ->whereRaw("
                             ST_Distance_Sphere(
                                 point(longitude, latitude),
-                                point(
-                                    (SELECT longitude FROM users WHERE zip_code = ?),
-                                    (SELECT latitude FROM users WHERE zip_code = ?)
-                                )
+                                point(?, ?)
                             ) <= ? * 1609.34
-                        ", [$searchZipCode, $searchZipCode, $radius])
+                        ", [$referencePoint->longitude, $referencePoint->latitude, $radius])
                         ->pluck('id');
                 };
 
