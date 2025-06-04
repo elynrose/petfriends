@@ -10,6 +10,11 @@ class BookingPolicy
 {
     use HandlesAuthorization;
 
+    public function booking_access(User $user)
+    {
+        return true;
+    }
+
     public function viewAny(User $user)
     {
         return true;
