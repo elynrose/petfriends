@@ -10,7 +10,6 @@ use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
 use App\Models\Pet;
 use App\Models\User;
-use Gate;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,8 +24,6 @@ class BookingController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('booking_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         $bookings = Booking::with(['pet', 'user', 'media'])
             ->where('user_id', auth()->id())
             ->orderBy('status', 'asc')
@@ -42,8 +39,6 @@ class BookingController extends Controller
 
     public function create()
     {
-        abort_if(Gate::denies('booking_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         return view('frontend.bookings.create', compact('pets', 'users'));
     }
 
@@ -72,12 +67,12 @@ class BookingController extends Controller
 
     public function edit(Booking $booking)
     {
-        abort_if(Gate::denies('booking_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         $pets = Pet::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
         $booking->load('pet', 'user');
 
         return view('frontend.bookings.edit', compact('booking', 'pets', 'users'));
@@ -85,6 +80,10 @@ class BookingController extends Controller
 
     public function update(UpdateBookingRequest $request, Booking $booking)
     {
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         $booking->update($request->all());
 
         if (count($booking->photos) > 0) {
@@ -106,7 +105,9 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        abort_if(Gate::denies('booking_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         $booking->load('pet', 'user');
 
@@ -115,7 +116,9 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
-        abort_if(Gate::denies('booking_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         // Prevent cancellation of completed bookings
         if ($booking->status === 'completed') {
@@ -129,7 +132,9 @@ class BookingController extends Controller
 
     public function massDestroy(MassDestroyBookingRequest $request)
     {
-        $bookings = Booking::find(request('ids'));
+        $bookings = Booking::whereIn('id', request('ids'))
+            ->where('user_id', auth()->id())
+            ->get();
 
         foreach ($bookings as $booking) {
             $booking->delete();
@@ -140,18 +145,20 @@ class BookingController extends Controller
 
     public function storeCKEditorImages(Request $request)
     {
-        abort_if(Gate::denies('booking_create') && Gate::denies('booking_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $model         = new Booking();
-        $model->id     = $request->input('crud_id', 0);
+        $model = new Booking();
+        $model->id = $request->input('crud_id', 0);
         $model->exists = true;
-        $media         = $model->addMediaFromRequest('upload')->toMediaCollection('ck-media');
+        $media = $model->addMediaFromRequest('upload')->toMediaCollection('ck-media');
 
         return response()->json(['id' => $media->id, 'url' => $media->getUrl()], Response::HTTP_CREATED);
     }
 
     public function complete(Booking $booking)
     {
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         // Check if the booking is already completed
         if ($booking->status === 'completed') {
             return redirect()->route('frontend.requests.index')
@@ -224,6 +231,4 @@ class BookingController extends Controller
                 ->with('error', 'Error completing booking: ' . $e->getMessage());
         }
     }
-
-
 }
