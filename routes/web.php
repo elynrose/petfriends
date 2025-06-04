@@ -92,7 +92,7 @@ Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 
 });
 
 // Frontend routes
-Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['auth', '2fa']], function () {
+Route::group(['prefix' => 'frontend', 'as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['auth', '2fa']], function () {
     Route::get('/home', 'HomeController@index')->name('home');
 
     // Members routes
